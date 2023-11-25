@@ -1,4 +1,4 @@
-# Bild Wordpress Demo repo
+# Falcon Tailwind Wordpress Starter Enviroment
 
 Purpose of this repo is to demonstrate and document recommended workflows for integrating WP Engine, Local, Git and Github in our Wordpress development cycle.  
 
