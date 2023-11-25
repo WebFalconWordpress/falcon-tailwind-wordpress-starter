@@ -1,0 +1,27 @@
+name: Deploy to WP Engine Staging
+on:
+  push:
+    branches:
+     - development
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: install theme assets
+      run: npm install
+      working-directory: wp-content/themes/pubcalls
+
+    - name: build theme assets
+      run: npm run production
+      working-directory: wp-content/themes/pubcalls
+
+    - name: GitHub Action Deploy to WP Engine
+      uses: wpengine/github-action-wpe-site-deploy@v3
+      with:
+      # Deploy vars
+        WPE_SSHG_KEY_PRIVATE: ${{ secrets.WPE_SSHG_KEY }}
+        WPE_ENV: pozivi
+        PHP_LINT: TRUE
+        CACHE_CLEAR: TRUE
