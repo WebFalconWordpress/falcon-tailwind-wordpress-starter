@@ -5,7 +5,10 @@ Purpose of this repo is to demonstrate and document recommended workflows for in
 URL of the WP Engine instance is: [https://bildwpdemode.wpengine.com](https://bildwpdemode.wpengine.com)
 
 
-## Initial workflow
+
+
+
+## Initial workflow (Fresh site creation)
 
 When starting work on a new Wordpress website follow these steps: 
 - Create new site on WP Engine.
@@ -26,6 +29,18 @@ When starting work on a new Wordpress website follow these steps:
 ![flow image](/wp-flow.png)  
 
 <br />
+
+
+## Creating new Local instance from an existing WP Engine site and Github repo
+
+- Use Local to connect to WP Engine and pull the site.
+- Use git to get the repo from Github to the Wordpress root directory using these commands:
+  - These commands should be run from the Wordpress root directory (for Local sites this is *<project dir>/app/public*) and since there are already files there it's a slightly different procedure than starting with a fresh site.
+  - Run **git init** to initialize the repo.
+  - Run **git remote add origin >github-repo-url<** to connect with the Github repo.
+  - Run **git fetch** to get existing git data.
+  - Run **git checkout -t origin/development -f** to set upstream branch.
+
 
 
 ## Recommended practices
@@ -73,17 +88,6 @@ When starting work on a new Wordpress website follow these steps:
 - Example Github action given in this repo enables deployment of a Wordpress site from the Github repo to the WP engine instace.
 - This example repo assumes only one Environment on the WP engine site (production) but if there are multiple environments or some additional instances outside WP Engine we should then have seperate action files for each instance/environment.
 - Explaining how Github actions work is beyond the scope of this doc but a good starting point with more details can be found [here](https://docs.github.com/en/actions/learn-github-actions/understanding-github-actions)
-
-
-### Creating new Local instance from an existing WP Engine site and Github repo
-
-- Use Local to connect to WP Engine and pull the site.
-- Use git to get the repo from Github to the Wordpress root directory using these commands:
-  - These commands should be run from the Wordpress root directory (for Local sites this is *<project dir>/app/public*) and since there are already files there it's a slightly different procedure than starting with a fresh site.
-  - Run **git init** to initialize the repo.
-  - Run **git remote add origin >github-repo-url<** to connect with the Github repo.
-  - Run **git fetch** to get existing git data.
-  - Run **git checkout -t origin/main -f** to set upstream branch.
 
 
 ### Recommended links
