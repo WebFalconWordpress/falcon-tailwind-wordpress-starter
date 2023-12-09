@@ -1,0 +1,23 @@
+@import "wordpress-normalizer.css";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+@import "block-styles/index.css";
+@import "patterns-styles/index.css";
+
+/* 
+ * HERE YOU WRITTE CSS THAT IS GLOBAL FOR GUTENBERG EDITOR
+ * THIS IS ONLY FOR GUTENBERG. 
+ */
+
+
+.wp-block{
+    @apply max-w-screen-xl;
+}
+
+.wp-block[data-align=wide] {
+    @apply max-w-screen-xl;
+}
+
+.wp-block[data-align=full] {
+    @apply max-w-full;
+}

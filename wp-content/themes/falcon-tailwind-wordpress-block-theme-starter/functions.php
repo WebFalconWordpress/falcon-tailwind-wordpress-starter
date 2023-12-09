@@ -5,7 +5,11 @@
  */
 function falcontwstarter_setup() { 
 
-	wp_enqueue_style( 'falcontwstarter_normalizer', falcontwstarter_asset( 'assets/css/wordpress-normalizer.css' ) );
+	// load only inf it is not the admin area
+	if ( ! is_admin() ) {
+		// Load the theme stylesheet.
+		wp_enqueue_style( 'falcontwstarter_normalizer', falcontwstarter_asset( 'assets/css/wordpress-normalizer.css' ) );
+	}
 
 	// Load translations for This template
 	load_theme_textdomain('falcontwstarter', get_template_directory() . '/languages');
@@ -31,7 +35,7 @@ function falcontwstarter_setup() {
 
 	// This feature enables block styles which apply custom styles to block editor inside admin panel
 	add_theme_support( 'editor-styles' );
-	add_editor_style( 'assets/css/editor-style.css' );
+	add_editor_style( 'assets/css/editor-styles.css' );
  
 	// Registers navigation menu locations for a theme.
 	register_nav_menus(
@@ -76,7 +80,7 @@ function apply_gutenberg_block_changes() {
 function falcontwstarter_enqueue_scripts() {
 	$theme = wp_get_theme();
 
-	wp_enqueue_style( 'falcontwstarter', falcontwstarter_asset( 'assets/css/app.css' ), array(), $theme->get( 'Version' ) );
+	wp_enqueue_style( 'falcontwstarter', falcontwstarter_asset( 'assets/css/frontend-styles.css' ), array(), $theme->get( 'Version' ) );
 	wp_enqueue_script( 'falcontwstarter', falcontwstarter_asset( 'assets/js/app.js' ), array(), $theme->get( 'Version' ) );
 }
 
@@ -97,6 +101,18 @@ function falcontwstarter_asset( $path ) {
 
 	return add_query_arg( 'time', time(),  get_stylesheet_directory_uri() . '/' . $path );
 }
+
+/**
+ * Adds option to upload SVG files.
+ *
+ */
+function add_file_types_to_uploads($file_types){
+    $new_filetypes = array();
+    $new_filetypes['svg'] = 'image/svg+xml';
+    $file_types = array_merge($file_types, $new_filetypes );
+    return $file_types;
+}
+add_filter('upload_mimes', 'add_file_types_to_uploads');
 
 /**
  * Adds option 'li_class' to 'wp_nav_menu'.
