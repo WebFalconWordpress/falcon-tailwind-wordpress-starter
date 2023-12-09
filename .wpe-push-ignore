@@ -1,4 +1,4 @@
 .github
 .github/*
-wp-content/themes/falcon-tailwind-wordpress-block-theme-starter/node_modules
-wp-content/themes/falcon-tailwind-wordpress-block-theme-starter/node_modules/*
+wp-content/themes/falcon-tailwind-theme-starter/node_modules
+wp-content/themes/falcon-tailwind-theme-starter/node_modules/*
