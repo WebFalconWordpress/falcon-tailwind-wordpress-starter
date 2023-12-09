@@ -11,15 +11,15 @@ jobs:
 
     - name: install theme assets
       run: npm install
-      working-directory: wp-content/themes/falcon-tailwind-wordpress-block-theme-starter
+      working-directory: wp-content/themes/falcon-tailwind-theme-starter
 
     - name: build theme assets
       run: npm run production
-      working-directory: wp-content/themes/falcon-tailwind-wordpress-block-theme-starter
+      working-directory: wp-content/themes/falcon-tailwind-theme-starter
 
     - name: delete node modules
       run: rm -Rf node_modules
-      working-directory: wp-content/themes/falcon-tailwind-wordpress-block-theme-starter 
+      working-directory: wp-content/themes/falcon-tailwind-theme-starter 
       
     - name: GitHub Action Deploy to WP Engine
       uses: wpengine/github-action-wpe-site-deploy@v3

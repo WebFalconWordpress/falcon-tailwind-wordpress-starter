@@ -5,7 +5,7 @@
 	"author": "Web Falcon",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/WebFalconWordpress/falcon-tailwind-wordpress-block-theme-starter"
+		"url": "https://github.com/WebFalconWordpress/falcon-tailwind-theme-starter"
 	},
 	"theme_uri": "https://falconstarter.wpengine.com",
 	"author_uri": "https://webfalcon.me",
