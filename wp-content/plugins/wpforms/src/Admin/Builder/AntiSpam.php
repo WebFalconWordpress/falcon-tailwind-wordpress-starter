@@ -50,7 +50,7 @@ class AntiSpam {
 	 */
 	public function panel_content( $instance ) {
 
-		$this->form_data = $instance->form_data;
+		$this->form_data = $this->update_settings_form_data( $instance->form_data );
 
 		echo '<div class="wpforms-panel-content-section wpforms-panel-content-section-anti_spam">';
 		echo '<div class="wpforms-panel-content-section-title">';
@@ -60,11 +60,12 @@ class AntiSpam {
 		$antispam = wpforms_panel_field(
 			'toggle',
 			'settings',
-			'antispam',
+			'antispam_v3',
 			$this->form_data,
-			__( 'Enable anti-spam protection', 'wpforms-lite' ),
+			__( 'Enable modern anti-spam protection', 'wpforms-lite' ),
 			[
-				'tooltip' => __( 'Turn on invisible spam protection.', 'wpforms-lite' ),
+				'value'   => (int) ! empty( $this->form_data['settings']['antispam_v3'] ),
+				'tooltip' => __( 'Turn on invisible modern spam protection.', 'wpforms-lite' ),
 			],
 			false
 		);
@@ -77,7 +78,20 @@ class AntiSpam {
 			]
 		);
 
-		if ( ! empty( $this->form_data['settings']['honeypot'] ) ) {
+		if ( ! empty( $this->form_data['settings']['antispam'] ) && empty( $this->form_data['settings']['antispam_v3'] ) ) {
+			wpforms_panel_field(
+				'toggle',
+				'settings',
+				'antispam',
+				$this->form_data,
+				__( 'Enable anti-spam protection', 'wpforms-lite' ),
+				[
+					'tooltip' => __( 'Turn on invisible spam protection.', 'wpforms-lite' ),
+				]
+			);
+		}
+
+		if ( ! empty( $this->form_data['settings']['honeypot'] ) && empty( $this->form_data['settings']['antispam_v3'] ) ) {
 			wpforms_panel_field(
 				'toggle',
 				'settings',
@@ -91,6 +105,20 @@ class AntiSpam {
 		$this->store_spam_entries_settings();
 		$this->time_limit_settings();
 		$this->captcha_settings();
+
+		// Hidden setting to store blocked entries by filtering as a spam.
+		// This setting is needed to keep backward compatibility with old forms.
+		wpforms_panel_field(
+			'checkbox',
+			'anti_spam',
+			'filtering_store_spam',
+			$this->form_data,
+			'',
+			[
+				'parent' => 'settings',
+				'class'  => 'wpforms-hidden',
+			]
+		);
 
 		/**
 		 * Fires once in the end of content panel before Also Available section.
@@ -116,18 +144,31 @@ class AntiSpam {
 	}
 
 	/**
-	 * Check if it is a new setup.
+	 * Update the form data on the builder settings panel.
 	 *
-	 * @since 1.8.3
+	 * @since 1.9.2
 	 *
-	 * @return bool
+	 * @param array $form_data Form data.
+	 *
+	 * @return array
 	 */
-	private function is_new_setup() {
+	private function update_settings_form_data( array $form_data ): array {
 
-		$form_counts = wp_count_posts( 'wpforms' );
-		$form_counts = array_filter( (array) $form_counts );
+		if ( ! $form_data ) {
+			return $form_data;
+		}
 
-		return empty( $form_counts );
+		// Update `Filtering` store spam entries behaviour.
+		// Enable for new forms and old forms without any `Filtering` setting enabled.
+		if (
+			empty( $form_data['settings']['anti_spam']['filtering_store_spam'] ) &&
+			empty( $form_data['settings']['anti_spam']['country_filter']['enable'] ) &&
+			empty( $form_data['settings']['anti_spam']['keyword_filter']['enable'] )
+		) {
+			$form_data['settings']['anti_spam']['filtering_store_spam'] = true;
+		}
+
+		return $form_data;
 	}
 
 	/**
@@ -139,12 +180,19 @@ class AntiSpam {
 
 		$captcha_settings = wpforms_get_captcha_settings();
 
+		if ( empty( $captcha_settings['provider'] ) || $captcha_settings['provider'] === 'none' ) {
+			return;
+		}
+
 		if (
-			empty( $captcha_settings['provider'] ) ||
-			$captcha_settings['provider'] === 'none' ||
-			empty( $captcha_settings['site_key'] ) ||
-			empty( $captcha_settings['secret_key'] )
+			$captcha_settings['provider'] !== 'hcaptcha' && (
+				empty( $captcha_settings['site_key'] ) || empty( $captcha_settings['secret_key'] )
+			)
 		) {
+			return;
+		}
+
+		if ( $captcha_settings['provider'] === 'hcaptcha' && empty( $captcha_settings['site_key'] ) ) {
 			return;
 		}
 
@@ -195,10 +243,11 @@ class AntiSpam {
 	 */
 	public function store_spam_entries_settings() {
 
-		// Enable storing entries by default for new setup.
-		$store_spam_entries = ! empty( $this->form_data['settings']['store_spam_entries'] )
-			? $this->form_data['settings']['store_spam_entries']
-			: $this->is_new_setup();
+		if ( ! wpforms()->is_pro() ) {
+			return;
+		}
+
+		$disable_entries = $this->form_data['settings']['disable_entries'] ?? 0;
 
 		wpforms_panel_field(
 			'toggle',
@@ -207,7 +256,8 @@ class AntiSpam {
 			$this->form_data,
 			__( 'Store spam entries in the database', 'wpforms-lite' ),
 			[
-				'value' => $store_spam_entries,
+				'value' => $this->form_data['settings']['store_spam_entries'] ?? 0,
+				'class' => $disable_entries ? 'wpforms-hidden' : '',
 			]
 		);
 	}
@@ -244,7 +294,7 @@ class AntiSpam {
 				'subsection' => 'time_limit',
 				'type'       => 'number',
 				'min'        => 1,
-				'default'    => 3,
+				'default'    => 2,
 				'after'      => sprintf( '<span class="wpforms-panel-field-after">%s</span>', __( 'seconds', 'wpforms-lite' ) ),
 			]
 		);

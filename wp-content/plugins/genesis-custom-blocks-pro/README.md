@@ -3,8 +3,8 @@
 Contributors: lukecarbis, ryankienstra, Stino11, rheinardkorf, studiopress, wpengine
 Tags: gutenberg, blocks, block editor, fields, template
 Requires at least: 5.7
-Tested up to: 6.3
-Stable tag: 1.6.0
+Tested up to: 6.5
+Stable tag: 1.7.0
 Requires PHP: 7.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl
@@ -84,6 +84,12 @@ A: No. You can use this plugin completely independently. All you need is to have
 A: No. The Pro plugin contains all the features of the free plugin as well as the advanced features. This is the only plugin you need installed/active.
 
 ## Changelog ##
+
+### 1.7.0 - 2023-3-20
+* Fix a WP 6.5 compatibility bug in the GCB editor. [PR 178](https://github.com/studiopress/genesis-custom-blocks/pull/178)
+
+### 1.6.1 - 2023-12-20
+* In Post field, show more suggestions for `<input>` when they've searched for something. [PR 87](https://github.com/studiopress/genesis-custom-blocks-pro/pull/87)
 
 ### 1.6.0 - 2023-11-09
 * Fix an error in previewing blocks in the editor. [PR 170](https://github.com/studiopress/genesis-custom-blocks/pull/170)

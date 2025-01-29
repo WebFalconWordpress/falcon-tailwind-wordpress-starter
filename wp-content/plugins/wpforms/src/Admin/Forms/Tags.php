@@ -4,7 +4,6 @@ namespace WPForms\Admin\Forms;
 
 use WP_Post;
 use WPForms_Form_Handler;
-use WPForms_Overview_Table;
 
 /**
  * Tags on All Forms page.
@@ -95,7 +94,7 @@ class Tags {
 	 */
 	private function update_view_vars() {
 
-		$views_object       = wpforms()->get( 'forms_views' );
+		$views_object       = wpforms()->obj( 'forms_views' );
 		$this->current_view = $views_object->get_current_view();
 		$view_config        = $views_object->get_view_by_slug( $this->current_view );
 		$this->base_url     = remove_query_arg(
@@ -151,7 +150,7 @@ class Tags {
 			'wpforms-admin-forms-overview-choicesjs',
 			WPFORMS_PLUGIN_URL . 'assets/lib/choices.min.js',
 			[],
-			'9.0.1',
+			'10.2.0',
 			true
 		);
 
@@ -180,12 +179,12 @@ class Tags {
 			'loadingText'       => esc_html__( 'Loading...', 'wpforms-lite' ),
 			'noResultsText'     => esc_html__( 'No results found', 'wpforms-lite' ),
 			'noChoicesText'     => esc_html__( 'No tags to choose from', 'wpforms-lite' ),
-			'itemSelectText'    => '',
 			'searchEnabled'     => true,
 			'searchChoices'     => true,
 			'searchFloor'       => 1,
 			'searchResultLimit' => 100,
 			'searchFields'      => [ 'label' ],
+			'allowHTML'         => true,
 			// These `fuseOptions` options enable the search of chars not only from the beginning of the tags.
 			'fuseOptions'       => [
 				'threshold' => 0.1,
@@ -239,7 +238,7 @@ class Tags {
 	 */
 	private function is_tags_column_hidden() {
 
-		$overview_table = WPForms_Overview_Table::get_instance();
+		$overview_table = ListTable::get_instance();
 		$columns        = $overview_table->__call( 'get_column_info', [] );
 
 		return isset( $columns[1] ) && in_array( 'tags', $columns[1], true );
@@ -460,8 +459,8 @@ class Tags {
 	 *
 	 * @since 1.7.5
 	 *
-	 * @param string                 $which          The location of the table navigation: 'top' or 'bottom'.
-	 * @param WPForms_Overview_Table $overview_table Instance of the WPForms_Overview_Table class.
+	 * @param string    $which          The location of the table navigation: 'top' or 'bottom'.
+	 * @param ListTable $overview_table Instance of the ListTable class.
 	 */
 	public function extra_tablenav( $which, $overview_table ) {
 
@@ -522,7 +521,7 @@ class Tags {
 	 *
 	 * @since 1.7.5
 	 *
-	 * @param WPForms_Overview_Table $list_table Overview lit table object.
+	 * @param ListTable $list_table Overview list table object.
 	 */
 	public function bulk_edit_tags( $list_table ) {
 

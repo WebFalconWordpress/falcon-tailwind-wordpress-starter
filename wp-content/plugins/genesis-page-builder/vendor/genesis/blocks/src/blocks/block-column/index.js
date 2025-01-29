@@ -21,6 +21,7 @@ const { registerBlockType } = wp.blocks;
 registerBlockType( 'genesis-blocks/gb-columns', {
 	title: __( 'Advanced Columns', 'genesis-blocks' ),
 	description: __( 'Add a pre-defined column layout.', 'genesis-blocks' ),
+	supports: { html: false },
 	icon: 'editor-table',
 	category: 'genesis-blocks',
 	keywords: [

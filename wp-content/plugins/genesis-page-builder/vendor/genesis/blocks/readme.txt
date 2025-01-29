@@ -3,8 +3,8 @@ Contributors: dreamwhisper, johnstonphilip, marksabbath, mikeday, mindctrl, mode
 Donate link: https://studiopress.com
 Tags: Blocks, editor, gutenberg, gutenberg blocks, page builder, block enabled, page building, block, WP Engine
 Requires at least: 6.1
-Tested up to: 6.3
-Stable tag: 3.1.1
+Tested up to: 6.5
+Stable tag: 3.1.3
 Requires PHP: 7.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -103,6 +103,12 @@ Yes, you will need to have WordPress 5.3 or later installed to take advantage of
 3. Some of the many blocks included in Genesis Blocks
 
 == Changelog ==
+
+= 3.1.3 =
+* Fixed: Minor security vulnerability.
+
+= 3.1.2 =
+* Fixed: WP 6.5 compatibility problem with responsive font size controls.
 
 = 3.1.1 =
 * Fixed: Prevent block errors in wp-admin/widgets.php and in the Customizer with block widgets.

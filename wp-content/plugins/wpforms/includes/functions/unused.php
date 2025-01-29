@@ -320,5 +320,13 @@ function wpforms_get_providers_all() {
 			'plugin_slug' => 'wpforms-hubspot',
 			'license'     => 'pro',
 		],
+		[
+			'name'        => 'Kit',
+			'slug'        => 'convertkit',
+			'img'         => 'addon-icon-kit.png',
+			'plugin'      => 'wpforms-convertkit/wpforms-convertkit.php',
+			'plugin_slug' => 'wpforms-convertkit',
+			'license'     => 'pro',
+		],
 	];
 }

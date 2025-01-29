@@ -3,7 +3,7 @@
 namespace WPForms\Pro\Integrations\LiteConnect;
 
 use WPForms\Emails\Mailer;
-use WPForms\Emails\Templates\General;
+use WPForms\Emails\Helpers as EmailHelpers;
 use WPForms\Helpers\Crypto;
 use WPForms\Helpers\Transient;
 
@@ -197,7 +197,7 @@ class Integration extends \WPForms\Integrations\LiteConnect\Integration {
 			return false;
 		}
 
-		$entry_id = wpforms()->get( 'entry' )->add( $entry_args );
+		$entry_id = wpforms()->obj( 'entry' )->add( $entry_args );
 
 		if ( ! $entry_id ) {
 			return false;
@@ -205,7 +205,7 @@ class Integration extends \WPForms\Integrations\LiteConnect\Integration {
 
 		// Update the Entry ID for a corresponding payment.
 		if ( isset( $entry_args['payment_id'] ) ) {
-			wpforms()->get( 'payment' )->update( $entry_args['payment_id'], [ 'entry_id' => $entry_id ], '', '', [ 'cap' => false ] );
+			wpforms()->obj( 'payment' )->update( $entry_args['payment_id'], [ 'entry_id' => $entry_id ], '', '', [ 'cap' => false ] );
 		}
 
 		$status = isset( $entry_args['status'] ) ? $entry_args['status'] : '';
@@ -214,7 +214,7 @@ class Integration extends \WPForms\Integrations\LiteConnect\Integration {
 			$spam_reason = isset( $entry_args['form_data']['spam_reason'] ) ? $entry_args['form_data']['spam_reason'] : '';
 
 			// Add spam_reason to meta.
-			wpforms()->get( 'entry_meta' )->add(
+			wpforms()->obj( 'entry_meta' )->add(
 				[
 					'entry_id' => $entry_id,
 					'form_id'  => $entry_args['form_id'],
@@ -226,13 +226,13 @@ class Integration extends \WPForms\Integrations\LiteConnect\Integration {
 		}
 
 		$fields     = json_decode( $entry_args['fields'], true );
-		$submission = wpforms()->get( 'submission' );
+		$submission = wpforms()->obj( 'submission' );
 
 		$submission->register( $fields, [], $entry_args['form_id'], $entry_args['form_data'] );
 		$submission->create_fields( $entry_id );
 
 		// Add the ID of the entry on Firestore as an entry meta.
-		wpforms()->get( 'entry_meta' )->add(
+		wpforms()->obj( 'entry_meta' )->add(
 			[
 				'entry_id' => $entry_id,
 				'form_id'  => $entry_args['form_id'],
@@ -272,9 +272,9 @@ class Integration extends \WPForms\Integrations\LiteConnect\Integration {
 				continue;
 			}
 
-			wpforms()->get( 'entry' )->delete_where_in( 'entry_id', $entry_id );
-			wpforms()->get( 'entry_meta' )->delete_where_in( 'entry_id', $entry_id );
-			wpforms()->get( 'entry_fields' )->delete_where_in( 'entry_id', $entry_id );
+			wpforms()->obj( 'entry' )->delete_where_in( 'entry_id', $entry_id );
+			wpforms()->obj( 'entry_meta' )->delete_where_in( 'entry_id', $entry_id );
+			wpforms()->obj( 'entry_fields' )->delete_where_in( 'entry_id', $entry_id );
 		}
 	}
 
@@ -438,7 +438,7 @@ class Integration extends \WPForms\Integrations\LiteConnect\Integration {
 	 */
 	private function backup_id_exists( $backup_id ) {
 
-		$entry_id = wpforms()->get( 'entry_meta' )->get_meta(
+		$entry_id = wpforms()->obj( 'entry_meta' )->get_meta(
 			[
 				'type' => 'backup_id',
 				'data' => $backup_id,
@@ -483,29 +483,52 @@ class Integration extends \WPForms\Integrations\LiteConnect\Integration {
 	 */
 	private function send_email_notification() {
 
-		$to_email = self::get_enabled_email();
-		$subject  = esc_html__( 'Your form entries have been restored successfully!', 'wpforms' );
-
-		$message = sprintf(
-			'<strong>%s</strong><br><br>',
-			$subject
+		$to_email    = self::get_enabled_email();
+		$subject     = esc_html__( 'Your form entries have been restored successfully!', 'wpforms' );
+		$entries_url = admin_url( 'admin.php?page=wpforms-entries' );
+		$message     = sprintf(
+			'<tr><td class="field-name field-value"><strong>%s</strong><br/><br/>%s</td></tr>',
+			$subject,
+			sprintf(
+				wp_kses( /* translators: %1$s - WPForms Entries Overview admin page URL. */
+					__( 'You can view your form entries inside the WordPress Dashboard from the <a href="%s" rel="noreferrer noopener" target="_blank">Entries Overview report</a>.', 'wpforms' ),
+					[
+						'a' => [
+							'href'   => [],
+							'rel'    => [],
+							'target' => [],
+						],
+					]
+				),
+				$entries_url
+			)
 		);
 
-		$message .= sprintf(
-			wp_kses( /* translators: %s - WPForms Entries Overview admin page URL. */
-				__( 'You can view your form entries inside the WordPress Dashboard from the <a href="%s" rel="noreferrer noopener" target="_blank">Entries Overview report</a>.', 'wpforms' ),
-				[
-					'a' => [
-						'href'   => [],
-						'rel'    => [],
-						'target' => [],
-					],
-				]
-			),
-			admin_url( 'admin.php?page=wpforms-entries' )
-		);
+		// If it's a plain text template, replace break tags.
+		if ( EmailHelpers::is_plain_text_template() ) {
+			// Replace <br/> tags with line breaks.
+			$message = str_replace( '<br/>', "\r\n", $message );
+			// Add the entries URL to the end of the message.
+			$message .= "\r\n\r\n" . $entries_url;
+		}
 
-		$template = new General( $message );
+		// Create an arguments array for the template.
+		$args = [
+			'body' => [
+				'message' => $message,
+			],
+		];
+
+		/**
+		 * Filter to customize the email template name independently of the global setting.
+		 *
+		 * @since 1.8.6
+		 *
+		 * @param string $template_name The template name to be used.
+		 */
+		$template_name  = apply_filters( 'wpforms_pro_integrations_lite_connect_integration_email_template_name', EmailHelpers::get_current_template_name() );
+		$template_class = EmailHelpers::get_current_template_class( $template_name );
+		$template       = ( new $template_class() )->set_args( $args );
 
 		( new Mailer() )
 			->template( $template )

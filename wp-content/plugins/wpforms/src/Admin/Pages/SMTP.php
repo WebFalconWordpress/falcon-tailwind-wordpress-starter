@@ -66,10 +66,12 @@ class SMTP {
 
 		if ( wp_doing_ajax() ) {
 			add_action( 'wp_ajax_wpforms_smtp_page_check_plugin_status', [ $this, 'ajax_check_plugin_status' ] );
+			add_action( 'wpforms_plugin_activated', [ $this, 'smtp_activated' ] );
 		}
 
 		// Check what page we are on.
-		$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : ''; // phpcs:ignore WordPress.CSRF.NonceVerification
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
 
 		// Only load if we are actually on the SMTP page.
 		if ( $page !== self::SLUG ) {
@@ -112,7 +114,7 @@ class SMTP {
 
 		wp_enqueue_script(
 			'wpforms-admin-page-smtp',
-			WPFORMS_PLUGIN_URL . "assets/js/components/admin/pages/smtp{$min}.js",
+			WPFORMS_PLUGIN_URL . "assets/js/admin/pages/smtp{$min}.js",
 			[ 'jquery' ],
 			WPFORMS_VERSION,
 			true
@@ -123,6 +125,25 @@ class SMTP {
 			'wpforms_pluginlanding',
 			$this->get_js_strings()
 		);
+	}
+
+	/**
+	 * Set wp_mail_smtp_source option to 'wpforms' on WP Mail SMTP plugin activation.
+	 *
+	 * @since 1.8.7
+	 *
+	 * @param string $plugin_basename Plugin basename.
+	 */
+	public function smtp_activated( $plugin_basename ) {
+
+		if ( $plugin_basename !== $this->config['lite_plugin'] ) {
+			return;
+		}
+
+		// If user came from some certain page to install WP Mail SMTP, we can get the source and write it instead of default one.
+		$source = isset( $_POST['source'] ) ? sanitize_text_field( wp_unslash( $_POST['source'] ) ) : 'wpforms'; // phpcs:ignore WordPress.Security.NonceVerification.Missing
+
+		update_option( 'wp_mail_smtp_source', $source );
 	}
 
 	/**
@@ -260,12 +281,13 @@ class SMTP {
 			return;
 		}
 
-		$button_format       = '<button class="button %3$s" data-plugin="%1$s" data-action="%4$s">%2$s</button>';
+		$button_format       = '<button class="button %3$s" data-plugin="%1$s" data-action="%4$s" data-source="%5$s">%2$s</button>';
 		$button_allowed_html = [
 			'button' => [
 				'class'       => true,
 				'data-plugin' => true,
 				'data-action' => true,
+				'data-source' => true,
 			],
 		];
 
@@ -289,7 +311,9 @@ class SMTP {
 			];
 		}
 
-		$button = sprintf( $button_format, esc_attr( $step['plugin'] ), esc_html( $step['button_text'] ), esc_attr( $step['button_class'] ), esc_attr( $step['button_action'] ) );
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$source = isset( $_GET['source'] ) && $_GET['source'] === 'woocommerce' ? 'wpforms-woocommerce' : 'wpforms';
+		$button = sprintf( $button_format, esc_attr( $step['plugin'] ), esc_html( $step['button_text'] ), esc_attr( $step['button_class'] ), esc_attr( $step['button_action'] ), esc_attr( $source ) );
 
 		printf(
 			'<section class="step step-install">
@@ -471,48 +495,11 @@ class SMTP {
 	 *
 	 * @since 1.5.7
 	 * @since 1.6.1.2 Conditionally returns $phpmailer v5 or v6.
+	 * @since 1.8.7 Use always $phpmailer v6.
 	 *
 	 * @return \PHPMailer|\PHPMailer\PHPMailer\PHPMailer Instance of PHPMailer.
 	 */
 	protected function get_phpmailer() {
-
-		if ( version_compare( get_bloginfo( 'version' ), '5.5-alpha', '<' ) ) {
-			$phpmailer = $this->get_phpmailer_v5();
-		} else {
-			$phpmailer = $this->get_phpmailer_v6();
-		}
-
-		return $phpmailer;
-	}
-
-	/**
-	 * Get $phpmailer v5 instance.
-	 *
-	 * @since 1.6.1.2
-	 *
-	 * @return \PHPMailer Instance of PHPMailer.
-	 */
-	private function get_phpmailer_v5() {
-
-		global $phpmailer;
-
-		if ( ! ( $phpmailer instanceof \PHPMailer ) ) {
-			require_once ABSPATH . WPINC . '/class-phpmailer.php';
-			require_once ABSPATH . WPINC . '/class-smtp.php';
-			$phpmailer = new \PHPMailer( true ); // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
-		}
-
-		return $phpmailer;
-	}
-
-	/**
-	 * Get $phpmailer v6 instance.
-	 *
-	 * @since 1.6.1.2
-	 *
-	 * @return \PHPMailer\PHPMailer\PHPMailer Instance of PHPMailer.
-	 */
-	private function get_phpmailer_v6() {
 
 		global $phpmailer;
 

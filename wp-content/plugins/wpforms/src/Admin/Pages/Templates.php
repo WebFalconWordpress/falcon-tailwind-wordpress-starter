@@ -29,11 +29,14 @@ class Templates {
 	 */
 	public function init() {
 
-		if ( ! wpforms_is_admin_page( 'templates' ) ) {
+		if (
+			! wpforms_is_admin_page( 'templates' ) &&
+			! wpforms_is_admin_ajax()
+		) {
 			return;
 		}
 
-		$this->addons_obj = wpforms()->get( 'addons' );
+		$this->addons_obj = wpforms()->obj( 'addons' );
 
 		$this->hooks();
 	}
@@ -67,7 +70,7 @@ class Templates {
 
 		wp_enqueue_script(
 			'wpforms-admin-form-templates',
-			WPFORMS_PLUGIN_URL . "assets/js/components/admin/pages/form-templates{$min}.js",
+			WPFORMS_PLUGIN_URL . "assets/js/admin/pages/form-templates{$min}.js",
 			[],
 			WPFORMS_VERSION,
 			true

@@ -1,11 +1,13 @@
 === Genesis Blocks Pro ===
 Tags: blocks, editor, gutenberg, gutenberg blocks, page builder, block enabled, page building, block, WP Engine
 
-Requires at least: 5.3
+Requires at least: 6.1
 
-Tested up to: 6.2
+Tested up to: 6.5
 
-Stable tag: 3.1.1
+Stable tag: 3.1.3
+
+Requires PHP: 7.1
 
 License: GPLv2 or later
 
@@ -28,6 +30,12 @@ This will not convert Button blocks if you don't open the block editor.
 You might see some styling changes, especially if you have custom styling for classes other than 'gb-block-button'.
 
 == Changelog ==
+
+= 3.1.3 =
+* Fixed: Minor security vulnerability.
+
+= 3.1.2 =
+* Fixed: WP 6.5 compatibility problem with responsive font size controls.
 
 = 3.1.1 =
 * Fixed: Prevent block errors in wp-admin/widgets.php and in the Customizer with block widgets.

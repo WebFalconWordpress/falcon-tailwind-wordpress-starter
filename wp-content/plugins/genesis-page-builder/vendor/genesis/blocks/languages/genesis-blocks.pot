@@ -1,20 +1,21 @@
-# Copyright (C) 2023 StudioPress
+# Copyright (C) 2024 StudioPress
 # This file is distributed under the GPL2+.
 msgid ""
 msgstr ""
-"Project-Id-Version: Genesis Blocks 3.1.1\n"
+"Project-Id-Version: Genesis Blocks 3.1.3\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/genesis-blocks\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2023-11-16T18:30:56+00:00\n"
+"POT-Creation-Date: 2024-03-27T14:08:41+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"X-Generator: WP-CLI 2.9.0\n"
+"X-Generator: WP-CLI 2.10.0\n"
 "X-Domain: genesis-blocks\n"
 
 #. Plugin Name of the plugin
+#: genesis-blocks.php
 #: includes/load-scripts.php:112
 #: lib/Migration/Admin.php:135
 #: lib/Settings/AdminPage.php:67
@@ -23,18 +24,22 @@ msgid "Genesis Blocks"
 msgstr ""
 
 #. Plugin URI of the plugin
+#: genesis-blocks.php
 msgid "https://studiopress.com/genesis-pro/"
 msgstr ""
 
 #. Description of the plugin
+#: genesis-blocks.php
 msgid "A beautiful collection of handy blocks to help you get started with the new WordPress editor."
 msgstr ""
 
 #. Author of the plugin
+#: genesis-blocks.php
 msgid "StudioPress"
 msgstr ""
 
 #. Author URI of the plugin
+#: genesis-blocks.php
 msgid "https://www.studiopress.com/"
 msgstr ""
 
@@ -663,7 +668,7 @@ msgstr ""
 
 #: includes/patterns/gb_slate_section_feature_image_and_text_columns.php:76
 #: src/blocks/block-column-inner/index.js:31
-#: src/blocks/block-column/index.js:27
+#: src/blocks/block-column/index.js:28
 #: src/blocks/block-layout/index.js:32
 msgid "column"
 msgstr ""
@@ -1582,7 +1587,7 @@ msgstr ""
 msgid "Your Mailchimp API key is required for the Newsletter block to communicate with your Mailchimp account."
 msgstr ""
 
-#: src/blocks/block-post-grid/index.php:132
+#: src/blocks/block-post-grid/index.php:142
 msgid "Untitled"
 msgstr ""
 
@@ -2157,7 +2162,7 @@ msgid "Add a pre-defined column layout."
 msgstr ""
 
 #: src/blocks/block-column-inner/index.js:33
-#: src/blocks/block-column/index.js:29
+#: src/blocks/block-column/index.js:30
 msgid "row"
 msgstr ""
 
@@ -2236,7 +2241,7 @@ msgstr ""
 #: src/blocks/block-column/components/edit.js:98
 #: src/blocks/block-column/components/inspector.js:98
 #: src/blocks/block-column/components/inspector.js:104
-#: src/blocks/block-column/index.js:124
+#: src/blocks/block-column/index.js:125
 msgid "Column Layout"
 msgstr ""
 
@@ -2270,7 +2275,7 @@ msgid "General"
 msgstr ""
 
 #: src/blocks/block-column/components/inspector.js:72
-#: src/blocks/block-column/index.js:121
+#: src/blocks/block-column/index.js:122
 msgid "Column Count"
 msgstr ""
 
@@ -2283,7 +2288,7 @@ msgid "Change the layout of your columns."
 msgstr ""
 
 #: src/blocks/block-column/components/inspector.js:150
-#: src/blocks/block-column/index.js:127
+#: src/blocks/block-column/index.js:128
 msgid "Column Gap"
 msgstr ""
 
@@ -2296,7 +2301,7 @@ msgid "Adjust the width of the content inside the container wrapper."
 msgstr ""
 
 #: src/blocks/block-column/components/inspector.js:191
-#: src/blocks/block-column/index.js:133
+#: src/blocks/block-column/index.js:134
 msgid "Center Columns In Container"
 msgstr ""
 
@@ -2305,7 +2310,7 @@ msgid "Center the columns in the container when max-width is used."
 msgstr ""
 
 #: src/blocks/block-column/components/inspector.js:214
-#: src/blocks/block-column/index.js:136
+#: src/blocks/block-column/index.js:137
 msgid "Responsive Columns"
 msgstr ""
 
@@ -2317,20 +2322,20 @@ msgstr ""
 msgid "Advanced Columns"
 msgstr ""
 
-#: src/blocks/block-column/index.js:28
+#: src/blocks/block-column/index.js:29
 #: src/blocks/block-post-grid/index.js:33
 msgid "grid"
 msgstr ""
 
-#: src/blocks/block-column/index.js:130
+#: src/blocks/block-column/index.js:131
 msgid "Column Inner Max Width"
 msgstr ""
 
-#: src/blocks/block-column/index.js:139
+#: src/blocks/block-column/index.js:140
 msgid "Margin / Padding"
 msgstr ""
 
-#: src/blocks/block-column/index.js:142
+#: src/blocks/block-column/index.js:143
 #: src/blocks/block-pricing-table-inner/components/button/inspector.js:149
 #: src/blocks/block-pricing-table-inner/components/description/inspector.js:192
 #: src/blocks/block-pricing-table-inner/components/global/inspector.js:125
@@ -2338,12 +2343,12 @@ msgstr ""
 msgid "Color Settings"
 msgstr ""
 
-#: src/blocks/block-column/index.js:145
+#: src/blocks/block-column/index.js:146
 msgid "Background Settings"
 msgstr ""
 
 #: src/blocks/block-container/components/inspector.js:65
-#: src/blocks/block-container/index.js:123
+#: src/blocks/block-container/index.js:124
 msgid "Container Options"
 msgstr ""
 
@@ -2376,7 +2381,7 @@ msgid "Inside Container Max Width (px)"
 msgstr ""
 
 #: src/blocks/block-container/components/inspector.js:175
-#: src/blocks/block-container/index.js:126
+#: src/blocks/block-container/index.js:127
 #: src/blocks/block-cta/components/inspector.js:135
 msgid "Background Options"
 msgstr ""

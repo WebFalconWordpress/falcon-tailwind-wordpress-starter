@@ -139,7 +139,7 @@ class TemplateSingleCache extends CacheBase {
 
 		$data = parent::get();
 
-		if ( parent::$updated === false ) {
+		if ( ! $this->updated ) {
 			$this->update_usage_tracking();
 		}
 
@@ -153,7 +153,7 @@ class TemplateSingleCache extends CacheBase {
 	 */
 	private function update_usage_tracking() {
 
-		$tasks = wpforms()->get( 'tasks' );
+		$tasks = wpforms()->obj( 'tasks' );
 
 		if ( ! $tasks ) {
 			return;
@@ -196,7 +196,7 @@ class TemplateSingleCache extends CacheBase {
 	 *
 	 * @return array Prepared data for caching.
 	 */
-	protected function prepare_cache_data( $data ) {
+	protected function prepare_cache_data( $data ): array {
 
 		if (
 			empty( $data ) ||
@@ -235,9 +235,11 @@ class TemplateSingleCache extends CacheBase {
 		$files     = glob( $cache_dir . '*.json' );
 
 		foreach ( $files as $filename ) {
+			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
 			$content = file_get_contents( $filename );
 
 			if ( empty( $content ) || trim( $content ) === '[]' ) {
+				// phpcs:ignore WordPress.WP.AlternativeFunctions.unlink_unlink
 				unlink( $filename );
 			}
 		}

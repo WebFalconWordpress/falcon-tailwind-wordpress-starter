@@ -39,7 +39,7 @@ class FormEmbedWizard {
 		// Form Embed Wizard should load only in the Form Builder and on the Edit/Add Page screen.
 		if (
 			! wpforms_is_admin_page( 'builder' ) &&
-			! wp_doing_ajax() &&
+			! wpforms_is_admin_ajax() &&
 			! $this->is_form_embed_page()
 		) {
 			return;
@@ -101,9 +101,10 @@ class FormEmbedWizard {
 
 		wp_enqueue_script(
 			'wpforms-admin-form-embed-wizard',
-			WPFORMS_PLUGIN_URL . "assets/js/components/admin/form-embed-wizard{$min}.js",
+			WPFORMS_PLUGIN_URL . "assets/js/admin/form-embed-wizard{$min}.js",
 			[ 'jquery', 'underscore' ],
-			WPFORMS_VERSION
+			WPFORMS_VERSION,
+			false
 		);
 
 		wp_localize_script(
@@ -167,7 +168,7 @@ class FormEmbedWizard {
 		static $challenge_active = null;
 
 		if ( $challenge_active === null ) {
-			$challenge        = wpforms()->get( 'challenge' );
+			$challenge        = wpforms()->obj( 'challenge' );
 			$challenge_active = method_exists( $challenge, 'challenge_active' ) ? $challenge->challenge_active() : false;
 		}
 
@@ -293,8 +294,9 @@ class FormEmbedWizard {
 
 		// Update challenge option to properly continue challenge on the embed page.
 		if ( $this->is_challenge_active() ) {
-			$challenge = wpforms()->get( 'challenge' );
-			if ( method_exists( $challenge, 'set_challenge_option' ) ) {
+			$challenge = wpforms()->obj( 'challenge' );
+
+			if ( $challenge && method_exists( $challenge, 'set_challenge_option' ) ) {
 				$challenge->set_challenge_option( [ 'embed_page' => $meta['embed_page'] ] );
 			}
 		}

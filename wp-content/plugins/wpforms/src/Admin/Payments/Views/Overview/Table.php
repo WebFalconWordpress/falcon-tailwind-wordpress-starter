@@ -84,21 +84,21 @@ class Table extends \WP_List_Table {
 			'date'  => esc_html__( 'Date', 'wpforms-lite' ),
 		];
 
-		if ( wpforms()->get( 'payment_queries' )->has_different_values( 'gateway' ) ) {
+		if ( wpforms()->obj( 'payment_queries' )->has_different_values( 'gateway' ) ) {
 			$columns['gateway'] = esc_html__( 'Gateway', 'wpforms-lite' );
 		}
 
-		if ( wpforms()->get( 'payment_queries' )->has_different_values( 'type' ) ) {
+		if ( wpforms()->obj( 'payment_queries' )->has_different_values( 'type' ) ) {
 			$columns['type'] = esc_html__( 'Type', 'wpforms-lite' );
 		}
 
-		if ( wpforms()->get( 'payment_meta' )->is_valid_meta_by_meta_key( 'coupon_id' ) ) {
+		if ( wpforms()->obj( 'payment_meta' )->is_valid_meta_by_meta_key( 'coupon_id' ) ) {
 			$columns['coupon'] = esc_html__( 'Coupon', 'wpforms-lite' );
 		}
 
 		$columns['total'] = esc_html__( 'Total', 'wpforms-lite' );
 
-		if ( wpforms()->get( 'payment_queries' )->has_subscription() ) {
+		if ( wpforms()->obj( 'payment_queries' )->has_subscription() ) {
 			$columns['subscription'] = esc_html__( 'Subscription', 'wpforms-lite' );
 		}
 
@@ -166,7 +166,7 @@ class Table extends \WP_List_Table {
 		$this->table_query_args = $this->prepare_table_query_args( $data_args );
 
 		// Retrieve the payment records for the given data arguments.
-		$this->items = wpforms()->get( 'payment' )->get_payments( $this->table_query_args );
+		$this->items = wpforms()->obj( 'payment' )->get_payments( $this->table_query_args );
 
 		// Setup the counts.
 		$this->setup_counts();
@@ -182,7 +182,7 @@ class Table extends \WP_List_Table {
 		$this->set_pagination_args(
 			[
 				'total_items' => $total_items,
-				'total_pages' => $total_pages,
+				'total_pages' => (int) $total_pages,
 				'per_page'    => $per_page,
 			]
 		);
@@ -252,7 +252,7 @@ class Table extends \WP_List_Table {
 			return;
 		}
 
-		$has_renewal = wpforms()->get( 'payment_queries' )->if_subscription_has_renewal( $item['subscription_id'] );
+		$has_renewal = wpforms()->obj( 'payment_queries' )->if_subscription_has_renewal( $item['subscription_id'] );
 
 		// Leave the default row if the subscription has no renewal.
 		if ( ! $has_renewal ) {
@@ -404,7 +404,7 @@ class Table extends \WP_List_Table {
 			foreach ( $nav_attributes['data'] as $attribute_key => $attribute_value ) {
 				$query_args = array_merge( $this->table_query_args, [ $nav_key => $attribute_key ] );
 
-				if ( in_array( $attribute_key, $selected, true ) || wpforms()->get( 'payment_queries' )->if_exists( $query_args ) ) {
+				if ( in_array( $attribute_key, $selected, true ) || wpforms()->obj( 'payment_queries' )->if_exists( $query_args ) ) {
 					$filtered_data[ $attribute_key ] = $attribute_value;
 				}
 			}
@@ -734,7 +734,7 @@ class Table extends \WP_List_Table {
 
 		// Calculate the counts for each view and store them in the $this->counts array.
 		foreach ( $views as $status => $status_args ) {
-			$this->counts[ $status ] = wpforms()->get( 'payment_queries' )->count_all( array_merge( $this->table_query_args, $status_args ) );
+			$this->counts[ $status ] = wpforms()->obj( 'payment_queries' )->count_all( array_merge( $this->table_query_args, $status_args ) );
 		}
 
 		// If the current view is the trash view, set the 'total' count to the 'trash' count.
@@ -785,8 +785,8 @@ class Table extends \WP_List_Table {
 	 */
 	private function get_column_title( array $item ) {
 
-		$title      = $this->get_payment_title( $item );
-		$na_status  = empty( $title ) ? sprintf( '<span class="payment-title-is-empty">- %s</span>', Helpers::get_placeholder_na_text() ) : '';
+		$title     = $this->get_payment_title( $item );
+		$na_status = empty( $title ) ? sprintf( '<span class="payment-title-is-empty">- %s</span>', Helpers::get_placeholder_na_text() ) : '';
 
 		if ( ! $item['is_published'] ) {
 			return sprintf( '<span>#%1$d %2$s</span> %3$s', $item['id'], esc_html( $title ), $na_status );
@@ -813,15 +813,22 @@ class Table extends \WP_List_Table {
 	 *
 	 * @return string
 	 */
-	private function get_column_date( $item ) {
+	private function get_column_date( array $item ): string {
 
-		$date      = $item['date_updated_gmt'];
-		$timestamp = strtotime( $date );
+		$item_date_gmt      = $item['date_updated_gmt'];
+		$item_date          = get_date_from_gmt( $item_date_gmt, 'Y-m-d H:i' );
+		$item_timestamp     = strtotime( $item_date );
+		$item_timestamp_gmt = strtotime( $item_date_gmt );
 
-		/* translators: %s - relative time difference, e.g. "5 minutes", "12 days". */
-		$human = sprintf( esc_html__( '%s ago', 'wpforms-lite' ), human_time_diff( $timestamp ) );
+		// Check if the $timestamp represents a time within the last 24 hours and is not in the future.
+		if ( $item_timestamp_gmt <= time() ) {
+			/* translators: %s - relative time difference, e.g. "5 minutes", "12 days". */
+			$human = sprintf( esc_html__( '%s ago', 'wpforms-lite' ), human_time_diff( $item_timestamp_gmt ) );
+		} else {
+			$human = wpforms_datetime_format( $item_timestamp, 'M j, Y', false );
+		}
 
-		return sprintf( '<span title="%s">%s</span>', gmdate( 'Y-m-d H:i', $timestamp ), $human );
+		return sprintf( '<span title="%s">%s</span>', wpforms_datetime_format( $item_timestamp, 'Y-m-d H:i', false ), $human );
 	}
 
 	/**
@@ -872,7 +879,7 @@ class Table extends \WP_List_Table {
 			return Helpers::get_placeholder_na_text();
 		}
 
-		$form = wpforms()->get( 'form' )->get( $item['form_id'] );
+		$form = wpforms()->obj( 'form' )->get( $item['form_id'] );
 
 		if ( ! $form || $form->post_status !== 'publish' ) {
 			return Helpers::get_placeholder_na_text();
@@ -979,7 +986,7 @@ class Table extends \WP_List_Table {
 	 */
 	private function get_column_coupon( $item ) {
 
-		$payment_meta = wpforms()->get( 'payment_meta' )->get_all( $item['id'] );
+		$payment_meta = wpforms()->obj( 'payment_meta' )->get_all( $item['id'] );
 
 		// If the coupon info is empty, show N/A.
 		if ( empty( $payment_meta['coupon_info'] ) || empty( $payment_meta['coupon_id'] ) ) {
@@ -1200,7 +1207,7 @@ class Table extends \WP_List_Table {
 			exit;
 		}
 
-		if ( isset( $_GET['coupon_id'] ) && ! wpforms()->get( 'payment_meta' )->is_valid_meta( 'coupon_id', absint( $_GET['coupon_id'] ) ) ) {
+		if ( isset( $_GET['coupon_id'] ) && ! wpforms()->obj( 'payment_meta' )->is_valid_meta( 'coupon_id', absint( $_GET['coupon_id'] ) ) ) {
 			wp_safe_redirect( Page::get_url() );
 			exit;
 		}

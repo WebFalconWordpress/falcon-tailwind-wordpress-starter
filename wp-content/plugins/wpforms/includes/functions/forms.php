@@ -16,7 +16,7 @@
  */
 function wpforms_display( $form_id = false, $title = false, $desc = false ) {
 
-	$frontend = wpforms()->get( 'frontend' );
+	$frontend = wpforms()->obj( 'frontend' );
 
 	if ( empty( $frontend ) ) {
 		return;
@@ -322,7 +322,7 @@ function wpforms_get_form_fields( $form = false, $allowlist = [] ) {
 	if ( is_object( $form ) ) {
 		$form = wpforms_decode( $form->post_content );
 	} elseif ( is_numeric( $form ) ) {
-		$form = wpforms()->get( 'form' )->get(
+		$form = wpforms()->obj( 'form' )->get(
 			absint( $form ),
 			[
 				'content_only' => true,
@@ -377,6 +377,17 @@ function wpforms_get_form_fields( $form = false, $allowlist = [] ) {
 	$form_fields = $form['fields'];
 
 	foreach ( $form_fields as $id => $form_field ) {
+		// Remove repeater field and its children.
+		if ( $form_field['type'] === 'repeater' ) {
+			foreach ( (array) $form_field['columns'] as $column ) {
+				$column_fields = $column['fields'] ?? [];
+
+				foreach ( $column_fields as $field_id ) {
+					unset( $form_fields[ $field_id ] );
+				}
+			}
+		}
+
 		if ( ! in_array( $form_field['type'], $allowlist, true ) ) {
 			unset( $form_fields[ $id ] );
 		}
@@ -477,15 +488,17 @@ function wpforms_get_captcha_settings() {
  * Process smart tags.
  *
  * @since 1.7.1
+ * @since 1.8.7 Added `$context` parameter.
  *
  * @param string $content   Content.
  * @param array  $form_data Form data.
  * @param array  $fields    List of fields.
  * @param string $entry_id  Entry ID.
+ * @param string $context   Context.
  *
  * @return string
  */
-function wpforms_process_smart_tags( $content, $form_data, $fields = [], $entry_id = '' ) {
+function wpforms_process_smart_tags( $content, $form_data, $fields = [], $entry_id = '', $context = '' ) {
 
 	// Skip it if variables have invalid format.
 	if ( ! is_string( $content ) || ! is_array( $form_data ) || ! is_array( $fields ) ) {
@@ -496,13 +509,62 @@ function wpforms_process_smart_tags( $content, $form_data, $fields = [], $entry_
 	 * Process smart tags.
 	 *
 	 * @since 1.4.0
+	 * @since 1.8.7 Added $context parameter.
 	 *
 	 * @param string $content   Content.
 	 * @param array  $form_data Form data.
 	 * @param array  $fields    List of fields.
 	 * @param string $entry_id  Entry ID.
+	 * @param string $context   Context.
 	 *
 	 * @return string
 	 */
-	return apply_filters( 'wpforms_process_smart_tags',  $content, $form_data, $fields, $entry_id );
+	return apply_filters( 'wpforms_process_smart_tags',  $content, $form_data, $fields, $entry_id, $context );
+}
+
+/**
+ * Check if form data slashing enabled.
+ *
+ * @since 1.9.0
+ *
+ * @return bool
+ */
+function wpforms_is_form_data_slashing_enabled() {
+
+	static $enabled = null;
+
+	if ( $enabled !== null ) {
+		return $enabled;
+	}
+
+	/**
+	 * Filter to enable form data slashing.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @param bool $enabled Form data slashing enabled.
+	 */
+	$enabled = (bool) apply_filters( 'wpforms_enable_form_data_slashing', $enabled );
+	$enabled = defined( 'WPFORMS_ENABLE_FORM_DATA_SLASHING' ) ? WPFORMS_ENABLE_FORM_DATA_SLASHING : $enabled;
+
+	return $enabled;
+}
+
+/**
+ * Check is frontend JS should be loaded in the header.
+ *
+ * @since 1.9.0
+ *
+ * @return bool
+ */
+function wpforms_is_frontend_js_header_force_load(): bool {
+
+	/**
+	 * Allow loading JS in header on various pages.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @param bool $force_load Force loading JS in header, default `false`.
+	 */
+	return (bool) apply_filters( 'wpforms_frontend_js_header_force_load', false );
 }

@@ -3,6 +3,10 @@
 // File generated from our OpenAPI spec
 namespace WPForms\Vendor\Stripe\Service;
 
+/**
+ * @phpstan-import-type RequestOptionsArray from \Stripe\Util\RequestOptions
+ * @psalm-import-type RequestOptionsArray from \Stripe\Util\RequestOptions
+ */
 class QuoteService extends \WPForms\Vendor\Stripe\Service\AbstractService
 {
     /**
@@ -10,7 +14,7 @@ class QuoteService extends \WPForms\Vendor\Stripe\Service\AbstractService
      *
      * @param string $id
      * @param null|array $params
-     * @param null|array|\Stripe\Util\RequestOptions $opts
+     * @param null|RequestOptionsArray|\Stripe\Util\RequestOptions $opts
      *
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
@@ -24,7 +28,7 @@ class QuoteService extends \WPForms\Vendor\Stripe\Service\AbstractService
      * Returns a list of your quotes.
      *
      * @param null|array $params
-     * @param null|array|\Stripe\Util\RequestOptions $opts
+     * @param null|RequestOptionsArray|\Stripe\Util\RequestOptions $opts
      *
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
@@ -42,7 +46,7 @@ class QuoteService extends \WPForms\Vendor\Stripe\Service\AbstractService
      *
      * @param string $id
      * @param null|array $params
-     * @param null|array|\Stripe\Util\RequestOptions $opts
+     * @param null|RequestOptionsArray|\Stripe\Util\RequestOptions $opts
      *
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
@@ -59,7 +63,7 @@ class QuoteService extends \WPForms\Vendor\Stripe\Service\AbstractService
      *
      * @param string $id
      * @param null|array $params
-     * @param null|array|\Stripe\Util\RequestOptions $opts
+     * @param null|RequestOptionsArray|\Stripe\Util\RequestOptions $opts
      *
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
@@ -74,7 +78,7 @@ class QuoteService extends \WPForms\Vendor\Stripe\Service\AbstractService
      *
      * @param string $id
      * @param null|array $params
-     * @param null|array|\Stripe\Util\RequestOptions $opts
+     * @param null|RequestOptionsArray|\Stripe\Util\RequestOptions $opts
      *
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
@@ -91,7 +95,7 @@ class QuoteService extends \WPForms\Vendor\Stripe\Service\AbstractService
      * href="https://dashboard.stripe.com/settings/billing/quote">quote template</a>.
      *
      * @param null|array $params
-     * @param null|array|\Stripe\Util\RequestOptions $opts
+     * @param null|RequestOptionsArray|\Stripe\Util\RequestOptions $opts
      *
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
@@ -106,7 +110,7 @@ class QuoteService extends \WPForms\Vendor\Stripe\Service\AbstractService
      *
      * @param string $id
      * @param null|array $params
-     * @param null|array|\Stripe\Util\RequestOptions $opts
+     * @param null|RequestOptionsArray|\Stripe\Util\RequestOptions $opts
      *
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
@@ -117,11 +121,32 @@ class QuoteService extends \WPForms\Vendor\Stripe\Service\AbstractService
         return $this->request('post', $this->buildPath('/v1/quotes/%s/finalize', $id), $params, $opts);
     }
     /**
+     * Download the PDF for a finalized quote. Explanation for special handling can be
+     * found <a href="https://docs.stripe.com/quotes/overview#quote_pdf">here</a>.
+     *
+     * @param string $id
+     * @param callable $readBodyChunkCallable
+     * @param null|array $params
+     * @param null|RequestOptionsArray|\Stripe\Util\RequestOptions $opts
+     *
+     * @throws \Stripe\Exception\ApiErrorException if the request fails
+     *
+     * @return mixed
+     */
+    public function pdf($id, $readBodyChunkCallable, $params = null, $opts = null)
+    {
+        $opts = \WPForms\Vendor\Stripe\Util\RequestOptions::parse($opts);
+        if (!isset($opts->apiBase)) {
+            $opts->apiBase = $this->getClient()->getFilesBase();
+        }
+        return $this->requestStream('get', $this->buildPath('/v1/quotes/%s/pdf', $id), $readBodyChunkCallable, $params, $opts);
+    }
+    /**
      * Retrieves the quote with the given ID.
      *
      * @param string $id
      * @param null|array $params
-     * @param null|array|\Stripe\Util\RequestOptions $opts
+     * @param null|RequestOptionsArray|\Stripe\Util\RequestOptions $opts
      *
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
@@ -136,7 +161,7 @@ class QuoteService extends \WPForms\Vendor\Stripe\Service\AbstractService
      *
      * @param string $id
      * @param null|array $params
-     * @param null|array|\Stripe\Util\RequestOptions $opts
+     * @param null|RequestOptionsArray|\Stripe\Util\RequestOptions $opts
      *
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
@@ -145,23 +170,5 @@ class QuoteService extends \WPForms\Vendor\Stripe\Service\AbstractService
     public function update($id, $params = null, $opts = null)
     {
         return $this->request('post', $this->buildPath('/v1/quotes/%s', $id), $params, $opts);
-    }
-    /**
-     * Download the PDF for a finalized quote.
-     *
-     * @param string $id
-     * @param callable $readBodyChunkCallable
-     * @param null|array $params
-     * @param null|array|\Stripe\Util\RequestOptions $opts
-     *
-     * @throws \Stripe\Exception\ApiErrorException if the request fails
-     */
-    public function pdf($id, $readBodyChunkCallable, $params = null, $opts = null)
-    {
-        $opts = \WPForms\Vendor\Stripe\Util\RequestOptions::parse($opts);
-        if (!isset($opts->apiBase)) {
-            $opts->apiBase = $this->getClient()->getFilesBase();
-        }
-        $this->requestStream('get', $this->buildPath('/v1/quotes/%s/pdf', $id), $readBodyChunkCallable, $params, $opts);
     }
 }

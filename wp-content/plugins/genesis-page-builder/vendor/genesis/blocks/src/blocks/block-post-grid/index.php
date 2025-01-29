@@ -7,6 +7,16 @@
  */
 
 /**
+ * Gets whether a tag is a heading tag.
+ *
+ * @param string $tag The tag to examine.
+ * @return boolean
+ */
+function is_heading( $tag ) {
+	return in_array( $tag, [ 'h1', 'h2', 'h3', 'h4', 'h5', 'h6' ], true );
+}
+
+/**
  * Renders the post grid block on server.
  *
  * @param string $attributes  Pass the block attributes.
@@ -133,13 +143,9 @@ function genesis_blocks_render_block_core_latest_posts( $attributes ) {
 			}
 
 			if ( isset( $attributes['displayPostTitle'] ) && $attributes['displayPostTitle'] ) {
-
-				if ( isset( $attributes['postTitleTag'] ) ) {
-					$post_title_tag = $attributes['postTitleTag'];
-				} else {
-					$post_title_tag = 'h2';
-				}
-
+				$post_title_tag    = is_heading( $attributes['postTitleTag'] ?? '' )
+					? $attributes['postTitleTag']
+					: 'h2';
 				$post_grid_markup .= sprintf(
 					'<%3$s class="gb-block-post-grid-title"><a href="%1$s" rel="bookmark">%2$s</a></%3$s>',
 					esc_url( get_permalink( $post_id ) ),
@@ -274,23 +280,22 @@ function genesis_blocks_render_block_core_latest_posts( $attributes ) {
 
 		/* Post grid section title */
 		if ( isset( $attributes['displaySectionTitle'] ) && $attributes['displaySectionTitle'] && ! empty( $attributes['sectionTitle'] ) ) {
-			if ( isset( $attributes['sectionTitleTag'] ) ) {
-				$section_title_tag = $attributes['sectionTitleTag'];
-			} else {
-				$section_title_tag = 'h2';
-			}
-
-			$section_title = '<' . esc_attr( $section_title_tag ) . ' class="gb-post-grid-section-title">' . esc_html( $attributes['sectionTitle'] ) . '</' . esc_attr( $section_title_tag ) . '>';
+			$section_title_tag = is_heading( $attributes['sectionTitleTag'] ?? '' )
+				? $attributes['sectionTitleTag']
+				: 'h2';
+			$section_title     = '<' . esc_attr( $section_title_tag ) . ' class="gb-post-grid-section-title">' . esc_html( $attributes['sectionTitle'] ) . '</' . esc_attr( $section_title_tag ) . '>';
 		} else {
 			$section_title = null;
 		}
 
 		/* Post grid section tag */
-		if ( isset( $attributes['sectionTag'] ) ) {
-			$section_tag = $attributes['sectionTag'];
-		} else {
-			$section_tag = 'section';
-		}
+		$section_tag = in_array(
+			$attributes['sectionTag'] ?? '',
+			[ 'div', 'header', 'section', 'article', 'main', 'aside', 'footer' ],
+			true
+		)
+		? $attributes['sectionTag']
+		: 'section';
 
 		/* Output the post markup */
 		$block_content = sprintf(

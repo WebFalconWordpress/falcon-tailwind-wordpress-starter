@@ -5,7 +5,7 @@
  * Author: WP Engine
  * Author URI: http://wpengine.com
  * Description: Part of Genesis Pro, Genesis Blocks Pro enables you to create beautiful and effective content faster with block-based page-building tools.
- * Version: 3.1.1
+ * Version: 3.1.3
  * License: GPL2+
  * License URI: http://www.gnu.org/licenses/gpl-2.0.txt
  *

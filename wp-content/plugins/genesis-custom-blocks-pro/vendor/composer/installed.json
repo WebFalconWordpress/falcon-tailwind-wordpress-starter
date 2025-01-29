@@ -2,50 +2,15 @@
     "packages": [
         {
             "name": "studiopress/genesis-custom-blocks",
-            "version": "dev-trunk",
+            "version": "trunk",
             "version_normalized": "dev-trunk",
             "source": {
                 "type": "svn",
-                "url": "https://plugins.svn.wordpress.org/genesis-custom-blocks",
-                "reference": "/trunk/@2993422"
+                "url": "https://plugins.svn.wordpress.org/genesis-custom-blocks/",
+                "reference": "trunk"
             },
-            "require": {
-                "php": "^7 || ^8"
-            },
-            "require-dev": {
-                "brain/monkey": "^2",
-                "dealerdirect/phpcodesniffer-composer-installer": "^1",
-                "mockery/mockery": "^1",
-                "phpcompatibility/phpcompatibility-wp": "^2.1.4",
-                "phpunit/phpunit": "^5.7 || ^7 || ^9",
-                "squizlabs/php_codesniffer": "^3.7.2",
-                "wp-coding-standards/wpcs": "dev-develop#2.3.0-fix-vsprintf",
-                "yoast/phpunit-polyfills": "^1"
-            },
-            "time": "2023-11-09T11:34:54-06:00",
-            "type": "wordpress-plugin",
+            "type": "library",
             "installation-source": "source",
-            "autoload": {
-                "psr-4": {
-                    "Genesis\\CustomBlocks\\": "php/"
-                }
-            },
-            "scripts": {
-                "lint": [
-                    "phpcs"
-                ],
-                "lint-fix": [
-                    "phpcbf"
-                ],
-                "test": [
-                    "phpunit"
-                ]
-            },
-            "license": [
-                "GPL-2.0"
-            ],
-            "description": "The easy way to build custom blocks for Gutenberg.",
-            "homepage": "https://github.com/studiopress/genesis-custom-blocks",
             "install-path": "../studiopress/genesis-custom-blocks"
         }
     ],

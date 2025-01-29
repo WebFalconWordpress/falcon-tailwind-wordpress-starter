@@ -28,7 +28,7 @@ class SmartTags {
 	 */
 	public function hooks() {
 
-		add_filter( 'wpforms_process_smart_tags', [ $this, 'process' ], 10, 4 );
+		add_filter( 'wpforms_process_smart_tags', [ $this, 'process' ], 10, 5 );
 		add_filter( 'wpforms_builder_enqueues_smart_tags', [ $this, 'builder' ] );
 	}
 
@@ -133,6 +133,7 @@ class SmartTags {
 			'url_lost_password' => esc_html__( 'Lost Password URL', 'wpforms-lite' ),
 			'unique_value'      => esc_html__( 'Unique Value', 'wpforms-lite' ),
 			'site_name'         => esc_html__( 'Site Name', 'wpforms-lite' ),
+			'order_summary'     => esc_html__( 'Order Summary', 'wpforms-lite' ),
 		];
 	}
 
@@ -163,15 +164,23 @@ class SmartTags {
 	 * Process smart tags.
 	 *
 	 * @since 1.6.7
+	 * @since 1.8.7 Added `$context` parameter.
 	 *
 	 * @param string $content   Content.
 	 * @param array  $form_data Form data.
 	 * @param array  $fields    List of fields.
 	 * @param string $entry_id  Entry ID.
+	 * @param string $context   Context.
 	 *
 	 * @return string
 	 */
-	public function process( $content, $form_data, $fields = [], $entry_id = '' ) {
+	public function process( $content, $form_data, $fields = [], $entry_id = '', $context = '' ) {
+
+		// We shouldn't process smart tags in different WordPress editors
+		// since it produce unexpected results.
+		if ( wpforms_is_editor_page() ) {
+			return $content;
+		}
 
 		$smart_tags = $this->get_all_smart_tags( $content );
 
@@ -181,27 +190,50 @@ class SmartTags {
 
 		foreach ( $smart_tags as $smart_tag => $tag_name ) {
 			$class_name       = $this->get_smart_tag_class_name( $tag_name );
-			$smart_tag_object = new $class_name( $smart_tag );
+			$smart_tag_object = new $class_name( $smart_tag, $context );
+			$value            = $smart_tag_object->get_value( $form_data, $fields, $entry_id );
+			$field_id         = $smart_tag_object->get_attributes()['field_id'] ?? 0;
+			$field_id         = (int) explode( '|', $field_id )[0];
+
+			if (
+				$context === 'confirmation_redirect' &&
+				$field_id > 0 &&
+				in_array(
+					$fields[ $field_id ]['type'],
+					wpforms_get_multi_fields(),
+					true
+				)
+			) {
+				// Protect from the case where user already placed a pipe in the value.
+				$value = str_replace(
+					[ "\r\n", "\r", "\n", '|' ],
+					[ rawurlencode( '|' ), '|', '|', '|' ],
+					$value
+				);
+			}
 
 			/**
 			 * Modify the smart tag value.
 			 *
 			 * @since 1.6.7
 			 * @since 1.6.7.1 Added the 5th argument.
+			 * @since 1.9.0 Added the 6th argument.
 			 *
 			 * @param scalar|null $value            Smart Tag value.
 			 * @param array       $form_data        Form data.
-			 * @param string      $fields           List of fields.
+			 * @param array       $fields           List of fields.
 			 * @param int         $entry_id         Entry ID.
 			 * @param SmartTag    $smart_tag_object The smart tag object or the Generic object for those cases when class unregistered.
+			 * @param string      $context          Context.
 			 */
-			$value = apply_filters(
+			$value = apply_filters( // phpcs:ignore WPForms.PHP.ValidateHooks.InvalidHookName
 				"wpforms_smarttags_process_{$tag_name}_value",
-				$smart_tag_object->get_value( $form_data, $fields, $entry_id ),
+				$value,
 				$form_data,
 				$fields,
 				$entry_id,
-				$smart_tag_object
+				$smart_tag_object,
+				$context
 			);
 
 			/**
@@ -212,7 +244,7 @@ class SmartTags {
 			 * @param scalar|null $value            Smart Tag value.
 			 * @param string      $tag_name         Smart tag name.
 			 * @param array       $form_data        Form data.
-			 * @param string      $fields           List of fields.
+			 * @param array       $fields           List of fields.
 			 * @param int         $entry_id         Entry ID.
 			 * @param SmartTag    $smart_tag_object The smart tag object or the Generic object for those cases when class unregistered.
 			 */

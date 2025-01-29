@@ -30,16 +30,12 @@ namespace WPForms\Vendor\Stripe;
  * @property null|string $tiers_mode Defines if the tiering price should be <code>graduated</code> or <code>volume</code> based. In <code>volume</code>-based tiering, the maximum quantity within a period determines the per unit price. In <code>graduated</code> tiering, pricing can change as the quantity grows.
  * @property null|\Stripe\StripeObject $transform_quantity Apply a transformation to the reported usage or set quantity before computing the amount billed. Cannot be combined with <code>tiers</code>.
  * @property string $type One of <code>one_time</code> or <code>recurring</code> depending on whether the price is for a one-time purchase or a recurring (subscription) purchase.
- * @property null|int $unit_amount The unit amount in %s to be charged, represented as a whole integer if possible. Only set if <code>billing_scheme=per_unit</code>.
- * @property null|string $unit_amount_decimal The unit amount in %s to be charged, represented as a decimal string with at most 12 decimal places. Only set if <code>billing_scheme=per_unit</code>.
+ * @property null|int $unit_amount The unit amount in cents (or local equivalent) to be charged, represented as a whole integer if possible. Only set if <code>billing_scheme=per_unit</code>.
+ * @property null|string $unit_amount_decimal The unit amount in cents (or local equivalent) to be charged, represented as a decimal string with at most 12 decimal places. Only set if <code>billing_scheme=per_unit</code>.
  */
 class Price extends ApiResource
 {
     const OBJECT_NAME = 'price';
-    use ApiOperations\All;
-    use ApiOperations\Create;
-    use ApiOperations\Retrieve;
-    use ApiOperations\Search;
     use ApiOperations\Update;
     const BILLING_SCHEME_PER_UNIT = 'per_unit';
     const BILLING_SCHEME_TIERED = 'tiered';
@@ -51,16 +47,91 @@ class Price extends ApiResource
     const TYPE_ONE_TIME = 'one_time';
     const TYPE_RECURRING = 'recurring';
     /**
+     * Creates a new price for an existing product. The price can be recurring or
+     * one-time.
+     *
+     * @param null|array $params
+     * @param null|array|string $options
+     *
+     * @throws \Stripe\Exception\ApiErrorException if the request fails
+     *
+     * @return \Stripe\Price the created resource
+     */
+    public static function create($params = null, $options = null)
+    {
+        self::_validateParams($params);
+        $url = static::classUrl();
+        list($response, $opts) = static::_staticRequest('post', $url, $params, $options);
+        $obj = \WPForms\Vendor\Stripe\Util\Util::convertToStripeObject($response->json, $opts);
+        $obj->setLastResponse($response);
+        return $obj;
+    }
+    /**
+     * Returns a list of your active prices, excluding <a
+     * href="/docs/products-prices/pricing-models#inline-pricing">inline prices</a>.
+     * For the list of inactive prices, set <code>active</code> to false.
+     *
      * @param null|array $params
      * @param null|array|string $opts
      *
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
-     * @return \Stripe\SearchResult<Price> the price search results
+     * @return \Stripe\Collection<\Stripe\Price> of ApiResources
+     */
+    public static function all($params = null, $opts = null)
+    {
+        $url = static::classUrl();
+        return static::_requestPage($url, \WPForms\Vendor\Stripe\Collection::class, $params, $opts);
+    }
+    /**
+     * Retrieves the price with the given ID.
+     *
+     * @param array|string $id the ID of the API resource to retrieve, or an options array containing an `id` key
+     * @param null|array|string $opts
+     *
+     * @throws \Stripe\Exception\ApiErrorException if the request fails
+     *
+     * @return \Stripe\Price
+     */
+    public static function retrieve($id, $opts = null)
+    {
+        $opts = \WPForms\Vendor\Stripe\Util\RequestOptions::parse($opts);
+        $instance = new static($id, $opts);
+        $instance->refresh();
+        return $instance;
+    }
+    /**
+     * Updates the specified price by setting the values of the parameters passed. Any
+     * parameters not provided are left unchanged.
+     *
+     * @param string $id the ID of the resource to update
+     * @param null|array $params
+     * @param null|array|string $opts
+     *
+     * @throws \Stripe\Exception\ApiErrorException if the request fails
+     *
+     * @return \Stripe\Price the updated resource
+     */
+    public static function update($id, $params = null, $opts = null)
+    {
+        self::_validateParams($params);
+        $url = static::resourceUrl($id);
+        list($response, $opts) = static::_staticRequest('post', $url, $params, $opts);
+        $obj = \WPForms\Vendor\Stripe\Util\Util::convertToStripeObject($response->json, $opts);
+        $obj->setLastResponse($response);
+        return $obj;
+    }
+    /**
+     * @param null|array $params
+     * @param null|array|string $opts
+     *
+     * @throws \Stripe\Exception\ApiErrorException if the request fails
+     *
+     * @return \Stripe\SearchResult<\Stripe\Price> the price search results
      */
     public static function search($params = null, $opts = null)
     {
         $url = '/v1/prices/search';
-        return self::_searchResource($url, $params, $opts);
+        return static::_requestPage($url, \WPForms\Vendor\Stripe\SearchResult::class, $params, $opts);
     }
 }

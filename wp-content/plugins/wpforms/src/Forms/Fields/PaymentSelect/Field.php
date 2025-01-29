@@ -77,6 +77,9 @@ class Field extends \WPForms_Field {
 
 		// Form frontend JS enqueues.
 		add_action( 'wpforms_frontend_js', [ $this, 'enqueue_frontend_js' ] );
+
+		// Customize HTML field value.
+		add_filter( 'wpforms_html_field_value', [ $this, 'field_html_value' ], 10, 4 );
 	}
 
 	/**
@@ -159,6 +162,10 @@ class Field extends \WPForms_Field {
 			in_array( $field['style'], [ self::STYLE_CLASSIC, self::STYLE_MODERN ], true )
 		) {
 			$properties['container']['class'][] = "wpforms-field-select-style-{$field['style']}";
+		}
+
+		if ( $this->is_payment_quantities_enabled( $field ) ) {
+			$properties['container']['class'][] = ' wpforms-payment-quantities-enabled';
 		}
 
 		return $properties;
@@ -246,6 +253,9 @@ class Field extends \WPForms_Field {
 		];
 
 		$this->field_element( 'row', $field, $args );
+
+		// Quantity.
+		$this->field_option( 'quantity', $field );
 
 		// Description.
 		$this->field_option( 'description', $field );
@@ -339,6 +349,9 @@ class Field extends \WPForms_Field {
 
 		// Choices.
 		$this->field_preview_option( 'choices', $field, $args );
+
+		// Quantity.
+		$this->field_preview_option( 'quantity', $field );
 
 		// Description.
 		$this->field_preview_option( 'description', $field );
@@ -437,6 +450,8 @@ class Field extends \WPForms_Field {
 		}
 
 		echo '</select>';
+
+		$this->display_quantity_dropdown( $field );
 	}
 
 	/**
@@ -445,7 +460,7 @@ class Field extends \WPForms_Field {
 	 * @since 1.8.2
 	 *
 	 * @param int    $field_id     Field ID.
-	 * @param string $field_submit Submitted field value (selected option).
+	 * @param string $field_submit Submitted field value (raw data).
 	 * @param array  $form_data    Form data and settings.
 	 */
 	public function validate( $field_id, $field_submit, $form_data ) {
@@ -453,13 +468,13 @@ class Field extends \WPForms_Field {
 		// Basic required check - If field is marked as required, check for entry data.
 		if ( ! empty( $form_data['fields'][ $field_id ]['required'] ) && empty( $field_submit ) ) {
 
-			wpforms()->get( 'process' )->errors[ $form_data['id'] ][ $field_id ] = wpforms_get_required_label();
+			wpforms()->obj( 'process' )->errors[ $form_data['id'] ][ $field_id ] = wpforms_get_required_label();
 		}
 
 		// Validate that the option selected is real.
 		if ( ! empty( $field_submit ) && empty( $form_data['fields'][ $field_id ]['choices'][ $field_submit ] ) ) {
 
-			wpforms()->get( 'process' )->errors[ $form_data['id'] ][ $field_id ] = esc_html__( 'Invalid payment option', 'wpforms-lite' );
+			wpforms()->obj( 'process' )->errors[ $form_data['id'] ][ $field_id ] = esc_html__( 'Invalid payment option', 'wpforms-lite' );
 		}
 	}
 
@@ -494,7 +509,7 @@ class Field extends \WPForms_Field {
 			$value        = $choice_label . ' - ' . $value;
 		}
 
-		wpforms()->get( 'process' )->fields[ $field_id ] = [
+		$field_data = [
 			'name'         => $name,
 			'value'        => $value,
 			'value_choice' => $choice_label,
@@ -505,6 +520,12 @@ class Field extends \WPForms_Field {
 			'id'           => absint( $field_id ),
 			'type'         => sanitize_key( $this->type ),
 		];
+
+		if ( $this->is_payment_quantities_enabled( $field ) ) {
+			$field_data['quantity'] = $this->get_submitted_field_quantity( $field, $form_data );
+		}
+
+		wpforms()->obj( 'process' )->fields[ $field_id ] = $field_data;
 	}
 
 	/**
@@ -526,14 +547,14 @@ class Field extends \WPForms_Field {
 			}
 		}
 
-		if ( $has_modern_select || wpforms()->get( 'frontend' )->assets_global() ) {
+		if ( $has_modern_select || wpforms()->obj( 'frontend' )->assets_global() ) {
 			$min = wpforms_get_min_suffix();
 
 			wp_enqueue_style(
 				'wpforms-choicesjs',
 				WPFORMS_PLUGIN_URL . "assets/css/choices{$min}.css",
 				[],
-				'9.0.1'
+				'10.2.0'
 			);
 		}
 	}
@@ -557,7 +578,7 @@ class Field extends \WPForms_Field {
 			}
 		}
 
-		if ( $has_modern_select || wpforms()->get( 'frontend' )->assets_global() ) {
+		if ( $has_modern_select || wpforms()->obj( 'frontend' )->assets_global() ) {
 			$this->enqueue_choicesjs_once( $forms );
 		}
 	}
@@ -598,23 +619,27 @@ class Field extends \WPForms_Field {
 	}
 
 	/**
-	 * Get field name for ajax error message.
+	 * Get field name for an ajax error message.
 	 *
 	 * @since 1.8.2
 	 *
-	 * @param string $name  Field name for error triggered.
-	 * @param array  $field Field settings.
-	 * @param array  $props List of properties.
-	 * @param string $error Error message.
+	 * @param string|mixed $name Field name for error triggered.
+	 * @param array $field Field settings.
+	 * @param array $props List of properties.
+	 * @param string|string[] $error Error message.
 	 *
 	 * @return string
+	 * @noinspection PhpMissingReturnTypeInspection
+	 * @noinspection ReturnTypeCanBeDeclaredInspection
 	 */
 	public function ajax_error_field_name( $name, $field, $props, $error ) {
+
+		$name = (string) $name;
 
 		if ( ! isset( $field['type'] ) || $field['type'] !== $this->type ) {
 			return $name;
 		}
 
-		return isset( $props['input_container']['attr']['name'] ) ? $props['input_container']['attr']['name'] : '';
+		return $props['input_container']['attr']['name'] ?? '';
 	}
 }

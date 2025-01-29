@@ -114,6 +114,7 @@ registerBlockType( 'genesis-blocks/gb-container', {
 
 	supports: {
 		align: [ 'center', 'wide', 'full' ],
+		html: false,
 	},
 
 	attributes: blockAttributes,

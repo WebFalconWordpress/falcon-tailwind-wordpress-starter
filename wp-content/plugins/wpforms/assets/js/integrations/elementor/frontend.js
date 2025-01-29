@@ -1,4 +1,4 @@
-/* global wpforms, wpformsElementorVars, wpformsModernFileUpload, wpformsRecaptchaLoad, grecaptcha */
+/* global wpforms, wpformsElementorVars, wpformsModernFileUpload, wpformsRecaptchaLoad, grecaptcha, WPFormsRepeaterField, WPFormsStripePaymentElement */
 
 'use strict';
 
@@ -19,6 +19,24 @@ var WPFormsElementorFrontend = window.WPFormsElementorFrontend || ( function( do
 	var app = {
 
 		/**
+		 * Flag to force load ChoicesJS.
+		 *
+		 * @since 1.9.0
+		 *
+		 * @type {boolean}
+		 */
+		forceLoadChoices: false,
+
+		/**
+		 * Flag to force set Stripe.
+		 *
+		 * @since 1.9.3
+		 *
+		 * @type {boolean}
+		 */
+		forceSetStripe: false,
+
+		/**
 		 * Start the engine.
 		 *
 		 * @since 1.6.2
@@ -33,19 +51,58 @@ var WPFormsElementorFrontend = window.WPFormsElementorFrontend || ( function( do
 		 *
 		 * @since 1.6.2
 		 */
-		events: function() {
-
+		events() {
 			window.addEventListener( 'elementor/popup/show', function( event ) {
 
-				let $modal = $( '#elementor-popup-modal-' + event.detail.id ),
-					$form  = $modal.find( '.wpforms-form' );
+				const $modal = $( '#elementor-popup-modal-' + event.detail.id ),
+					$form = $modal.find( '.wpforms-form' );
 
 				if ( ! $form.length ) {
 					return;
 				}
 
+				app.forceSetStripe = true;
+
 				app.initFields( $form );
 			} );
+
+			// Force load ChoicesJS for elementor popup.
+			$( document ).on( 'elementor/popup/show', () => {
+				app.forceLoadChoices = true;
+
+				wpforms.loadChoicesJS();
+			} );
+
+			$( document ).on( 'wpformsBeforeLoadElementChoices', ( event, el ) => {
+				// Do not initialize on elementor popup.
+				if ( ! app.isFormInElementorPopup( el ) || app.forceLoadChoices ) {
+					return;
+				}
+
+				event.preventDefault();
+			} );
+
+			$( document ).on( 'wpformsBeforeStripePaymentElementSetup', ( event, el ) => {
+				// Do not initialize on elementor popup.
+				if ( ! app.isFormInElementorPopup( el ) || app.forceSetStripe ) {
+					return;
+				}
+
+				event.preventDefault();
+			} );
+		},
+
+		/**
+		 * Check if the form is in Elementor popup.
+		 *
+		 * @since 1.9.3
+		 *
+		 * @param {Object} form Form element.
+		 *
+		 * @return {boolean} True if the form is in Elementor popup, false otherwise.
+		 */
+		isFormInElementorPopup( form ) {
+			return $( form ).parents( 'div[data-elementor-type="popup"]' ).length;
 		},
 
 		/**
@@ -74,6 +131,16 @@ var WPFormsElementorFrontend = window.WPFormsElementorFrontend || ( function( do
 				} else {
 					wpformsRecaptchaLoad();
 				}
+			}
+
+			// Init Repeater fields.
+			if ( 'undefined' !== typeof WPFormsRepeaterField ) {
+				WPFormsRepeaterField.ready();
+			}
+
+			// Init Stripe payment.
+			if ( 'undefined' !== typeof WPFormsStripePaymentElement ) {
+				WPFormsStripePaymentElement.setupStripeForm( $form );
 			}
 
 			// Register a custom event.

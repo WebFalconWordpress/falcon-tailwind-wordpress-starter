@@ -6,6 +6,5 @@ $vendorDir = dirname(dirname(__FILE__));
 $baseDir = dirname($vendorDir);
 
 return array(
-    'Genesis\\CustomBlocks\\' => array($vendorDir . '/studiopress/genesis-custom-blocks/php'),
     'Genesis\\CustomBlocksPro\\' => array($baseDir . '/php'),
 );

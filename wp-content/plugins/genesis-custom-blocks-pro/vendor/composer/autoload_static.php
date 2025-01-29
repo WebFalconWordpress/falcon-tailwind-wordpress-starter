@@ -4,21 +4,16 @@
 
 namespace Composer\Autoload;
 
-class ComposerStaticInitecf3fd63828dccec48ad3217ae481f79
+class ComposerStaticInitbfd5bdaf262da3030b2b7df28577bd00
 {
     public static $prefixLengthsPsr4 = array (
         'G' => 
         array (
-            'Genesis\\CustomBlocks\\' => 21,
             'Genesis\\CustomBlocksPro\\' => 24,
         ),
     );
 
     public static $prefixDirsPsr4 = array (
-        'Genesis\\CustomBlocks\\' => 
-        array (
-            0 => __DIR__ . '/..' . '/studiopress/genesis-custom-blocks/php',
-        ),
         'Genesis\\CustomBlocksPro\\' => 
         array (
             0 => __DIR__ . '/../..' . '/php',
@@ -43,49 +38,14 @@ class ComposerStaticInitecf3fd63828dccec48ad3217ae481f79
         'Genesis\\CustomBlocksPro\\Plugin' => __DIR__ . '/../..' . '/php/Plugin.php',
         'Genesis\\CustomBlocksPro\\PostTypes\\BlockPost' => __DIR__ . '/../..' . '/php/PostTypes/BlockPost.php',
         'Genesis\\CustomBlocksPro\\Util' => __DIR__ . '/../..' . '/php/Util.php',
-        'Genesis\\CustomBlocks\\Admin\\Admin' => __DIR__ . '/..' . '/studiopress/genesis-custom-blocks/php/Admin/Admin.php',
-        'Genesis\\CustomBlocks\\Admin\\Documentation' => __DIR__ . '/..' . '/studiopress/genesis-custom-blocks/php/Admin/Documentation.php',
-        'Genesis\\CustomBlocks\\Admin\\EditBlock' => __DIR__ . '/..' . '/studiopress/genesis-custom-blocks/php/Admin/EditBlock.php',
-        'Genesis\\CustomBlocks\\Admin\\Import' => __DIR__ . '/..' . '/studiopress/genesis-custom-blocks/php/Admin/Import.php',
-        'Genesis\\CustomBlocks\\Admin\\Onboarding' => __DIR__ . '/..' . '/studiopress/genesis-custom-blocks/php/Admin/Onboarding.php',
-        'Genesis\\CustomBlocks\\Admin\\Settings' => __DIR__ . '/..' . '/studiopress/genesis-custom-blocks/php/Admin/Settings.php',
-        'Genesis\\CustomBlocks\\Admin\\Upgrade' => __DIR__ . '/..' . '/studiopress/genesis-custom-blocks/php/Admin/Upgrade.php',
-        'Genesis\\CustomBlocks\\Blocks\\Block' => __DIR__ . '/..' . '/studiopress/genesis-custom-blocks/php/Blocks/Block.php',
-        'Genesis\\CustomBlocks\\Blocks\\Controls\\Checkbox' => __DIR__ . '/..' . '/studiopress/genesis-custom-blocks/php/Blocks/Controls/Checkbox.php',
-        'Genesis\\CustomBlocks\\Blocks\\Controls\\Color' => __DIR__ . '/..' . '/studiopress/genesis-custom-blocks/php/Blocks/Controls/Color.php',
-        'Genesis\\CustomBlocks\\Blocks\\Controls\\ControlAbstract' => __DIR__ . '/..' . '/studiopress/genesis-custom-blocks/php/Blocks/Controls/ControlAbstract.php',
-        'Genesis\\CustomBlocks\\Blocks\\Controls\\ControlSetting' => __DIR__ . '/..' . '/studiopress/genesis-custom-blocks/php/Blocks/Controls/ControlSetting.php',
-        'Genesis\\CustomBlocks\\Blocks\\Controls\\Email' => __DIR__ . '/..' . '/studiopress/genesis-custom-blocks/php/Blocks/Controls/Email.php',
-        'Genesis\\CustomBlocks\\Blocks\\Controls\\File' => __DIR__ . '/..' . '/studiopress/genesis-custom-blocks/php/Blocks/Controls/File.php',
-        'Genesis\\CustomBlocks\\Blocks\\Controls\\Image' => __DIR__ . '/..' . '/studiopress/genesis-custom-blocks/php/Blocks/Controls/Image.php',
-        'Genesis\\CustomBlocks\\Blocks\\Controls\\InnerBlocks' => __DIR__ . '/..' . '/studiopress/genesis-custom-blocks/php/Blocks/Controls/InnerBlocks.php',
-        'Genesis\\CustomBlocks\\Blocks\\Controls\\Multiselect' => __DIR__ . '/..' . '/studiopress/genesis-custom-blocks/php/Blocks/Controls/Multiselect.php',
-        'Genesis\\CustomBlocks\\Blocks\\Controls\\Number' => __DIR__ . '/..' . '/studiopress/genesis-custom-blocks/php/Blocks/Controls/Number.php',
-        'Genesis\\CustomBlocks\\Blocks\\Controls\\Radio' => __DIR__ . '/..' . '/studiopress/genesis-custom-blocks/php/Blocks/Controls/Radio.php',
-        'Genesis\\CustomBlocks\\Blocks\\Controls\\Range' => __DIR__ . '/..' . '/studiopress/genesis-custom-blocks/php/Blocks/Controls/Range.php',
-        'Genesis\\CustomBlocks\\Blocks\\Controls\\Select' => __DIR__ . '/..' . '/studiopress/genesis-custom-blocks/php/Blocks/Controls/Select.php',
-        'Genesis\\CustomBlocks\\Blocks\\Controls\\Text' => __DIR__ . '/..' . '/studiopress/genesis-custom-blocks/php/Blocks/Controls/Text.php',
-        'Genesis\\CustomBlocks\\Blocks\\Controls\\Textarea' => __DIR__ . '/..' . '/studiopress/genesis-custom-blocks/php/Blocks/Controls/Textarea.php',
-        'Genesis\\CustomBlocks\\Blocks\\Controls\\Toggle' => __DIR__ . '/..' . '/studiopress/genesis-custom-blocks/php/Blocks/Controls/Toggle.php',
-        'Genesis\\CustomBlocks\\Blocks\\Controls\\Url' => __DIR__ . '/..' . '/studiopress/genesis-custom-blocks/php/Blocks/Controls/Url.php',
-        'Genesis\\CustomBlocks\\Blocks\\Field' => __DIR__ . '/..' . '/studiopress/genesis-custom-blocks/php/Blocks/Field.php',
-        'Genesis\\CustomBlocks\\Blocks\\Loader' => __DIR__ . '/..' . '/studiopress/genesis-custom-blocks/php/Blocks/Loader.php',
-        'Genesis\\CustomBlocks\\Blocks\\TemplateEditor' => __DIR__ . '/..' . '/studiopress/genesis-custom-blocks/php/Blocks/TemplateEditor.php',
-        'Genesis\\CustomBlocks\\ComponentAbstract' => __DIR__ . '/..' . '/studiopress/genesis-custom-blocks/php/ComponentAbstract.php',
-        'Genesis\\CustomBlocks\\ComponentInterface' => __DIR__ . '/..' . '/studiopress/genesis-custom-blocks/php/ComponentInterface.php',
-        'Genesis\\CustomBlocks\\Plugin' => __DIR__ . '/..' . '/studiopress/genesis-custom-blocks/php/Plugin.php',
-        'Genesis\\CustomBlocks\\PluginAbstract' => __DIR__ . '/..' . '/studiopress/genesis-custom-blocks/php/PluginAbstract.php',
-        'Genesis\\CustomBlocks\\PluginInterface' => __DIR__ . '/..' . '/studiopress/genesis-custom-blocks/php/PluginInterface.php',
-        'Genesis\\CustomBlocks\\PostTypes\\BlockPost' => __DIR__ . '/..' . '/studiopress/genesis-custom-blocks/php/PostTypes/BlockPost.php',
-        'Genesis\\CustomBlocks\\Util' => __DIR__ . '/..' . '/studiopress/genesis-custom-blocks/php/Util.php',
     );
 
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
-            $loader->prefixLengthsPsr4 = ComposerStaticInitecf3fd63828dccec48ad3217ae481f79::$prefixLengthsPsr4;
-            $loader->prefixDirsPsr4 = ComposerStaticInitecf3fd63828dccec48ad3217ae481f79::$prefixDirsPsr4;
-            $loader->classMap = ComposerStaticInitecf3fd63828dccec48ad3217ae481f79::$classMap;
+            $loader->prefixLengthsPsr4 = ComposerStaticInitbfd5bdaf262da3030b2b7df28577bd00::$prefixLengthsPsr4;
+            $loader->prefixDirsPsr4 = ComposerStaticInitbfd5bdaf262da3030b2b7df28577bd00::$prefixDirsPsr4;
+            $loader->classMap = ComposerStaticInitbfd5bdaf262da3030b2b7df28577bd00::$classMap;
 
         }, null, ClassLoader::class);
     }

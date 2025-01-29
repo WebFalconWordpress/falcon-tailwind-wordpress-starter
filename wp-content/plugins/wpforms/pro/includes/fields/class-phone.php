@@ -16,7 +16,7 @@ class WPForms_Field_Phone extends WPForms_Field {
 	 *
 	 * @since 1.6.3
 	 */
-	const INTL_VERSION = '18.2.1';
+	const INTL_VERSION = '21.2.8';
 
 	/**
 	 * Primary class constructor.
@@ -43,7 +43,10 @@ class WPForms_Field_Phone extends WPForms_Field {
 		add_action( 'wpforms_frontend_js', [ $this, 'enqueue_frontend_js' ] );
 
 		// Add frontend strings.
-		add_action( 'wpforms_frontend_strings', [ $this, 'add_frontend_strings' ] );
+		add_filter( 'wpforms_frontend_strings', [ $this, 'add_frontend_strings' ] );
+
+		// Admin form builder enqueues.
+		add_action( 'wpforms_builder_enqueues', [ $this, 'admin_builder_enqueues' ] );
 	}
 
 	/**
@@ -58,6 +61,8 @@ class WPForms_Field_Phone extends WPForms_Field {
 	 * @return array
 	 */
 	public function field_properties( $properties, $field, $form_data ) {
+
+		$properties['inputs']['primary']['attr']['aria-label'] = $field['label'] ?? esc_html__( 'Phone number', 'wpforms' );
 
 		// Smart: add validation rule and class.
 		if ( $field['format'] === 'smart' ) {
@@ -90,7 +95,7 @@ class WPForms_Field_Phone extends WPForms_Field {
 	 */
 	public function enqueue_frontend_css( $forms ) {
 
-		if ( ! wpforms()->frontend->assets_global() && ! $this->has_smart_format( $forms ) ) {
+		if ( ! wpforms()->obj( 'frontend' )->assets_global() && ! $this->has_smart_format( $forms ) ) {
 			return;
 		}
 
@@ -106,6 +111,25 @@ class WPForms_Field_Phone extends WPForms_Field {
 	}
 
 	/**
+	 * Enqueue script for the admin form builder.
+	 *
+	 * @since 1.9.2
+	 */
+	public function admin_builder_enqueues() {
+
+		$min = wpforms_get_min_suffix();
+
+		// JavaScript.
+		wp_enqueue_script(
+			'wpforms-builder-phone-field',
+			WPFORMS_PLUGIN_URL . "assets/pro/js/admin/builder/fields/phone{$min}.js",
+			[ 'jquery', 'wpforms-builder' ],
+			WPFORMS_VERSION,
+			false
+		);
+	}
+
+	/**
 	 * Form frontend JS enqueues.
 	 *
 	 * @since 1.5.2
@@ -114,17 +138,17 @@ class WPForms_Field_Phone extends WPForms_Field {
 	 */
 	public function enqueue_frontend_js( $forms ) {
 
-		if ( ! wpforms()->frontend->assets_global() && ! $this->has_smart_format( $forms ) ) {
+		if ( ! wpforms()->obj( 'frontend' )->assets_global() && ! $this->has_smart_format( $forms ) ) {
 			return;
 		}
 
 		// Load International Telephone Input library - https://github.com/jackocnr/intl-tel-input.
 		wp_enqueue_script(
 			'wpforms-smart-phone-field',
-			WPFORMS_PLUGIN_URL . 'assets/pro/lib/intl-tel-input/jquery.intl-tel-input.min.js',
-			[ 'jquery' ],
+			WPFORMS_PLUGIN_URL . 'assets/pro/lib/intl-tel-input/module.intl-tel-input.min.js',
+			[],
 			self::INTL_VERSION,
-			true
+			$this->load_script_in_footer()
 		);
 	}
 
@@ -277,6 +301,7 @@ class WPForms_Field_Phone extends WPForms_Field {
 	 * Field preview inside the builder.
 	 *
 	 * @since 1.0.0
+	 * @since 1.9.2 Added wrapper for the primary input for the rich preview in Smart format.
 	 *
 	 * @param array $field Field data.
 	 */
@@ -285,15 +310,49 @@ class WPForms_Field_Phone extends WPForms_Field {
 		// Define data.
 		$placeholder   = ! empty( $field['placeholder'] ) ? $field['placeholder'] : '';
 		$default_value = ! empty( $field['default_value'] ) ? $field['default_value'] : '';
+		$format        = ! empty( $field['format'] ) ? $field['format'] : 'smart';
+		$size          = ! empty( $field['size'] ) ? $field['size'] : 'medium';
 
 		// Label.
 		$this->field_preview_option( 'label', $field );
 
-		// Primary input.
-		echo '<input type="text" placeholder="' . esc_attr( $placeholder ) . '" value="' . esc_attr( $default_value ) . '" class="primary-input" readonly>';
+		// Primary input inside container for Smart format preview.
+		printf(
+			'<div class="wpforms-field-phone-input-container" data-format="%1$s">
+				<input type="text" placeholder="%2$s" value="%3$s" class="primary-input wpforms-field-%4$s" readonly>
+				<div class="wpforms-field-phone-country-container">
+					<div class="wpforms-field-phone-flag"></div>
+					<div class="wpforms-field-phone-arrow"></div>
+				</div>
+			</div>',
+			esc_attr( $format ),
+			esc_attr( $placeholder ),
+			esc_attr( $default_value ),
+			esc_attr( $size )
+		);
 
 		// Description.
 		$this->field_preview_option( 'description', $field );
+	}
+
+	/**
+	 * Get preview option.
+	 *
+	 * @since 1.9.3
+	 *
+	 * @param string $option Option name.
+	 * @param array  $field  Field data.
+	 * @param array  $args   Additional arguments.
+	 * @param bool   $echo   Echo or return.
+	 */
+	public function field_preview_option( $option, $field, $args = [], $echo = true ) { // phpcs:ignore Universal.NamingConventions.NoReservedKeywordParameterNames.echoFound
+
+		// Skip preview option for the editor.
+		if ( wpforms_is_editor_page() ) {
+			return;
+		}
+
+		parent::field_preview_option( $option, $field, $args, $echo );
 	}
 
 	/**
@@ -307,10 +366,16 @@ class WPForms_Field_Phone extends WPForms_Field {
 	 */
 	public function field_display( $field, $deprecated, $form_data ) {
 
+		if ( wpforms_is_editor_page() ) {
+			$this->field_preview( $field );
+
+			return;
+		}
+
 		// Define data.
 		$primary = $field['properties']['inputs']['primary'];
 
-		// Allow input type to be changed for this particular field.
+		// Allow an input type to be changed for this particular field.
 		$type = apply_filters( 'wpforms_phone_field_input_type', 'tel' );
 
 		// Primary field.
@@ -318,7 +383,7 @@ class WPForms_Field_Phone extends WPForms_Field {
 			'<input type="%s" %s %s>',
 			esc_attr( $type ),
 			wpforms_html_attributes( $primary['id'], $primary['class'], $primary['data'], $primary['attr'] ),
-			$primary['required']
+			esc_attr( $primary['required'] )
 		);
 	}
 
@@ -328,7 +393,7 @@ class WPForms_Field_Phone extends WPForms_Field {
 	 * @since 1.5.8
 	 *
 	 * @param int   $field_id     Field ID.
-	 * @param mixed $field_submit Submitted value.
+	 * @param mixed $field_submit Submitted field value (raw data).
 	 * @param array $form_data    Form data and settings.
 	 */
 	public function validate( $field_id, $field_submit, $form_data ) {
@@ -341,7 +406,7 @@ class WPForms_Field_Phone extends WPForms_Field {
 			! empty( $form_data['fields'][ $field_id ]['required'] ) &&
 			empty( $value )
 		) {
-			wpforms()->process->errors[ $form_id ][ $field_id ] = wpforms_get_required_label();
+			wpforms()->obj( 'process' )->errors[ $form_id ][ $field_id ] = wpforms_get_required_label();
 		}
 
 		if (
@@ -361,7 +426,7 @@ class WPForms_Field_Phone extends WPForms_Field {
 		}
 
 		if ( $error ) {
-			wpforms()->process->errors[ $form_id ][ $field_id ] = wpforms_setting( 'validation-phone', esc_html__( 'Please enter a valid phone number.', 'wpforms' ) );
+			wpforms()->obj( 'process' )->errors[ $form_id ][ $field_id ] = wpforms_setting( 'validation-phone', esc_html__( 'Please enter a valid phone number.', 'wpforms' ) );
 		}
 	}
 
@@ -379,10 +444,10 @@ class WPForms_Field_Phone extends WPForms_Field {
 		$name = ! empty( $form_data['fields'][ $field_id ]['label'] ) ? $form_data['fields'][ $field_id ]['label'] : '';
 
 		// Set final field details.
-		wpforms()->process->fields[ $field_id ] = [
+		wpforms()->obj( 'process' )->fields[ $field_id ] = [
 			'name'  => sanitize_text_field( $name ),
 			'value' => $this->sanitize_value( $field_submit ),
-			'id'    => absint( $field_id ),
+			'id'    => wpforms_validate_field_id( $field_id ),
 			'type'  => $this->type,
 		];
 	}

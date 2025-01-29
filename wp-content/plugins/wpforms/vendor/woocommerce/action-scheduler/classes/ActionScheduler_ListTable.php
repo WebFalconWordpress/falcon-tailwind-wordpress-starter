@@ -76,9 +76,9 @@ class ActionScheduler_ListTable extends ActionScheduler_Abstract_ListTable {
 	/**
 	 * Sets the current data store object into `store->action` and initialises the object.
 	 *
-	 * @param ActionScheduler_Store $store
-	 * @param ActionScheduler_Logger $logger
-	 * @param ActionScheduler_QueueRunner $runner
+	 * @param ActionScheduler_Store       $store Store object.
+	 * @param ActionScheduler_Logger      $logger Logger object.
+	 * @param ActionScheduler_QueueRunner $runner Runner object.
 	 */
 	public function __construct( ActionScheduler_Store $store, ActionScheduler_Logger $logger, ActionScheduler_QueueRunner $runner ) {
 
@@ -225,8 +225,9 @@ class ActionScheduler_ListTable extends ActionScheduler_Abstract_ListTable {
 		}
 
 		$output = '';
+		$num_time_periods = count( self::$time_periods );
 
-		for ( $time_period_index = 0, $periods_included = 0, $seconds_remaining = $interval; $time_period_index < count( self::$time_periods ) && $seconds_remaining > 0 && $periods_included < $periods_to_include; $time_period_index++ ) {
+		for ( $time_period_index = 0, $periods_included = 0, $seconds_remaining = $interval; $time_period_index < $num_time_periods && $seconds_remaining > 0 && $periods_included < $periods_to_include; $time_period_index++ ) {
 
 			$periods_in_interval = floor( $seconds_remaining / self::$time_periods[ $time_period_index ]['seconds'] );
 
@@ -234,7 +235,7 @@ class ActionScheduler_ListTable extends ActionScheduler_Abstract_ListTable {
 				if ( ! empty( $output ) ) {
 					$output .= ' ';
 				}
-				$output .= sprintf( _n( self::$time_periods[ $time_period_index ]['names'][0], self::$time_periods[ $time_period_index ]['names'][1], $periods_in_interval, 'action-scheduler' ), $periods_in_interval );
+				$output .= sprintf( translate_nooped_plural( self::$time_periods[ $time_period_index ]['names'], $periods_in_interval, 'action-scheduler' ), $periods_in_interval );
 				$seconds_remaining -= $periods_in_interval * self::$time_periods[ $time_period_index ]['seconds'];
 				$periods_included++;
 			}
@@ -246,13 +247,13 @@ class ActionScheduler_ListTable extends ActionScheduler_Abstract_ListTable {
 	/**
 	 * Returns the recurrence of an action or 'Non-repeating'. The output is human readable.
 	 *
-	 * @param ActionScheduler_Action $action
+	 * @param ActionScheduler_Action $action Action object.
 	 *
 	 * @return string
 	 */
 	protected function get_recurrence( $action ) {
 		$schedule = $action->get_schedule();
-		if ( $schedule->is_recurring() ) {
+		if ( $schedule->is_recurring() && method_exists( $schedule, 'get_recurrence' ) ) {
 			$recurrence = $schedule->get_recurrence();
 
 			if ( is_numeric( $recurrence ) ) {
@@ -269,7 +270,7 @@ class ActionScheduler_ListTable extends ActionScheduler_Abstract_ListTable {
 	/**
 	 * Serializes the argument of an action to render it in a human friendly format.
 	 *
-	 * @param array $row The array representation of the current row of the table
+	 * @param array $row The array representation of the current row of the table.
 	 *
 	 * @return string
 	 */
@@ -311,8 +312,8 @@ class ActionScheduler_ListTable extends ActionScheduler_Abstract_ListTable {
 	/**
 	 * Prints the logs entries inline. We do so to avoid loading Javascript and other hacks to show it in a modal.
 	 *
-	 * @param ActionScheduler_LogEntry $log_entry
-	 * @param DateTimezone $timezone
+	 * @param ActionScheduler_LogEntry $log_entry Log entry object.
+	 * @param DateTimezone             $timezone Timestamp.
 	 * @return string
 	 */
 	protected function get_log_entry_html( ActionScheduler_LogEntry $log_entry, DateTimezone $timezone ) {
@@ -324,8 +325,8 @@ class ActionScheduler_ListTable extends ActionScheduler_Abstract_ListTable {
 	/**
 	 * Only display row actions for pending actions.
 	 *
-	 * @param array  $row         Row to render
-	 * @param string $column_name Current row
+	 * @param array  $row         Row to render.
+	 * @param string $column_name Current row.
 	 *
 	 * @return string
 	 */
@@ -390,7 +391,7 @@ class ActionScheduler_ListTable extends ActionScheduler_Abstract_ListTable {
 
 			$async_request_lock_expiration = ActionScheduler::lock()->get_expiration( 'async-request-runner' );
 
-			// No lock set or lock expired
+			// No lock set or lock expired.
 			if ( false === $async_request_lock_expiration || $async_request_lock_expiration < time() ) {
 				$in_progress_url       = add_query_arg( 'status', 'in-progress', remove_query_arg( 'status' ) );
 				/* translators: %s: process URL */
@@ -449,7 +450,7 @@ class ActionScheduler_ListTable extends ActionScheduler_Abstract_ListTable {
 	/**
 	 * Prints the scheduled date in a human friendly format.
 	 *
-	 * @param array $row The array representation of the current row of the table
+	 * @param array $row The array representation of the current row of the table.
 	 *
 	 * @return string
 	 */
@@ -460,14 +461,18 @@ class ActionScheduler_ListTable extends ActionScheduler_Abstract_ListTable {
 	/**
 	 * Get the scheduled date in a human friendly format.
 	 *
-	 * @param ActionScheduler_Schedule $schedule
+	 * @param ActionScheduler_Schedule $schedule Action's schedule.
 	 * @return string
 	 */
 	protected function get_schedule_display_string( ActionScheduler_Schedule $schedule ) {
 
 		$schedule_display_string = '';
 
-		if ( ! $schedule->get_date() ) {
+		if ( is_a( $schedule, 'ActionScheduler_NullSchedule' ) ) {
+			return __( 'async', 'action-scheduler' );
+		}
+
+		if ( ! method_exists( $schedule, 'get_date' ) || ! $schedule->get_date() ) {
 			return '0000-00-00 00:00:00';
 		}
 
@@ -488,17 +493,30 @@ class ActionScheduler_ListTable extends ActionScheduler_Abstract_ListTable {
 	}
 
 	/**
-	 * Bulk delete
+	 * Bulk delete.
 	 *
 	 * Deletes actions based on their ID. This is the handler for the bulk delete. It assumes the data
 	 * properly validated by the callee and it will delete the actions without any extra validation.
 	 *
-	 * @param array $ids
-	 * @param string $ids_sql Inherited and unused
+	 * @param int[]  $ids Action IDs.
+	 * @param string $ids_sql Inherited and unused.
 	 */
 	protected function bulk_delete( array $ids, $ids_sql ) {
 		foreach ( $ids as $id ) {
-			$this->store->delete_action( $id );
+			try {
+				$this->store->delete_action( $id );
+			} catch ( Exception $e ) {
+				// A possible reason for an exception would include a scenario where the same action is deleted by a
+				// concurrent request.
+				error_log(
+					sprintf(
+						/* translators: 1: action ID 2: exception message. */
+						__( 'Action Scheduler was unable to delete action %1$d. Reason: %2$s', 'action-scheduler' ),
+						$id,
+						$e->getMessage()
+					)
+				);
+			}
 		}
 	}
 
@@ -506,7 +524,7 @@ class ActionScheduler_ListTable extends ActionScheduler_Abstract_ListTable {
 	 * Implements the logic behind running an action. ActionScheduler_Abstract_ListTable validates the request and their
 	 * parameters are valid.
 	 *
-	 * @param int $action_id
+	 * @param int $action_id Action ID.
 	 */
 	protected function row_action_cancel( $action_id ) {
 		$this->process_row_action( $action_id, 'cancel' );
@@ -516,7 +534,7 @@ class ActionScheduler_ListTable extends ActionScheduler_Abstract_ListTable {
 	 * Implements the logic behind running an action. ActionScheduler_Abstract_ListTable validates the request and their
 	 * parameters are valid.
 	 *
-	 * @param int $action_id
+	 * @param int $action_id Action ID.
 	 */
 	protected function row_action_run( $action_id ) {
 		$this->process_row_action( $action_id, 'run' );
@@ -543,7 +561,7 @@ class ActionScheduler_ListTable extends ActionScheduler_Abstract_ListTable {
 	/**
 	 * Implements the logic behind processing an action once an action link is clicked on the list table.
 	 *
-	 * @param int $action_id
+	 * @param int    $action_id Action ID.
 	 * @param string $row_action_type The type of action to perform on the action.
 	 */
 	protected function process_row_action( $action_id, $row_action_type ) {
@@ -582,6 +600,16 @@ class ActionScheduler_ListTable extends ActionScheduler_Abstract_ListTable {
 			'order'    => $this->get_request_order(),
 			'search'   => $this->get_request_search_query(),
 		);
+
+		/**
+		 * Change query arguments to query for past-due actions.
+		 * Past-due actions have the 'pending' status and are in the past.
+		 * This is needed because registering 'past-due' as a status is overkill.
+		 */
+		if ( 'past-due' === $this->get_request_status() ) {
+			$query['status'] = ActionScheduler_Store::STATUS_PENDING;
+			$query['date']   = as_get_datetime_object();
+		}
 
 		$this->items = array();
 
@@ -623,7 +651,7 @@ class ActionScheduler_ListTable extends ActionScheduler_Abstract_ListTable {
 	 * Prints the available statuses so the user can click to filter.
 	 */
 	protected function display_filter_by_status() {
-		$this->status_counts = $this->store->action_counts();
+		$this->status_counts = $this->store->action_counts() + $this->store->extra_action_counts();
 		parent::display_filter_by_status();
 	}
 

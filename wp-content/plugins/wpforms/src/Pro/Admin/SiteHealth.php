@@ -48,12 +48,17 @@ class SiteHealth extends \WPForms\Admin\SiteHealth {
 	 */
 	public function license_check() {
 
-		$license = wpforms()->license;
+		$license = wpforms()->obj( 'license' );
 
 		if ( empty( $license ) || ! $license->get() ) {
 			$status = __( 'not detected', 'wpforms' );
 		} else {
-			$status = $license->validate_key( $license->get(), false, false, true );
+			$from_cache = wpforms()->obj( 'license_api_validate_key_cache' )->get();
+
+			$status =
+				! empty( $from_cache ) ?
+				$license->validate_from_response( (object) $from_cache, false, false, true ) :
+				$license->validate_key( $license->get(), false, false, true );
 		}
 
 		$result = [
@@ -126,16 +131,16 @@ class SiteHealth extends \WPForms\Admin\SiteHealth {
 
 		$fields['total_entries'] = [
 			'label' => esc_html__( 'Total entries', 'wpforms' ),
-			'value' => wpforms()->get( 'entry' )->get_entries( [], true ),
+			'value' => wpforms()->obj( 'entry' )->get_entries( [], true ),
 		];
 
 		// We should be aware if license instance exists before using it.
-		if ( wpforms()->get( 'license' ) === null ) {
+		if ( wpforms()->obj( 'license' ) === null ) {
 			return $debug_info;
 		}
 
-		$license        = wpforms()->get( 'license' )->get();
-		$license_status = ucfirst( wpforms()->get( 'license' )->validate_key( $license, false, false, true ) );
+		$license        = wpforms()->obj( 'license' )->get();
+		$license_status = ucfirst( wpforms()->obj( 'license' )->validate_key( $license, false, false, true ) );
 
 		if ( $license_status !== 'Valid' && ! empty( $license ) ) {
 			$license_status .= " ($license)";
@@ -153,7 +158,7 @@ class SiteHealth extends \WPForms\Admin\SiteHealth {
 
 		$fields['license_location'] = [
 			'label' => esc_html__( 'License key location', 'wpforms' ),
-			'value' => wpforms()->get( 'license' )->get_key_location(),
+			'value' => wpforms()->obj( 'license' )->get_key_location(),
 		];
 
 		$debug_info['wpforms']['fields'] = wpforms_array_insert(

@@ -33,16 +33,16 @@ export const withResponsiveSettings = createHigherOrderComponent(
 			);
 			const selectedDevice = useSelect( ( select ) => {
 				const device =
-					select(
-						'core/edit-post'
-					)?.__experimentalGetPreviewDeviceType;
-				return !! device ? device() : DEVICE_NAMES.desktop;
+					select( 'core/editor' )?.getDeviceType ??
+					select( 'core/edit-post' )
+						?.__experimentalGetPreviewDeviceType;
+				return device?.() ?? DEVICE_NAMES.desktop;
 			} );
 
 			const setDevice =
-				useDispatch(
-					'core/edit-post'
-				)?.__experimentalSetPreviewDeviceType;
+				useDispatch( 'core/editor' )?.setDeviceType ??
+				useDispatch( 'core/edit-post' )
+					?.__experimentalSetPreviewDeviceType;
 			const isFontSizeDisabled =
 				! hasBlockSupport( props.name, 'typography.fontSize', true ) ||
 				! fontSizes?.length;

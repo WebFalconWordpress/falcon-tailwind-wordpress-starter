@@ -77,7 +77,7 @@ class BulkActions {
 			return;
 		}
 
-		$this->view = wpforms()->get( 'forms_views' )->get_current_view();
+		$this->view = wpforms()->obj( 'forms_views' )->get_current_view();
 
 		$this->hooks();
 	}
@@ -146,7 +146,7 @@ class BulkActions {
 	 * @uses process_action_duplicate
 	 * @uses process_action_empty_trash
 	 */
-	private function process_action() {
+	private function process_action() { // phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
 
 		$method = "process_action_{$this->action}";
 
@@ -159,6 +159,12 @@ class BulkActions {
 			return;
 		}
 
+		$query_args = [];
+
+		if ( count( $this->ids ) === 1 ) {
+			$query_args['type'] = wpforms_is_form_template( $this->ids[0] ) ? 'template' : 'form';
+		}
+
 		$result = [];
 
 		foreach ( $this->ids as $id ) {
@@ -169,14 +175,15 @@ class BulkActions {
 
 		// Empty trash action returns count of deleted forms.
 		if ( $method === 'process_action_empty_trash' ) {
-			$count_result = isset( $result[1] ) ? $result[1] : 0;
+			$count_result = $result[1] ?? 0;
 		}
+
+		$query_args[ rtrim( $this->action, 'e' ) . 'ed' ] = $count_result;
 
 		// Unset get vars and perform redirect to avoid action reuse.
 		wp_safe_redirect(
 			add_query_arg(
-				rtrim( $this->action, 'e' ) . 'ed',
-				$count_result,
+				$query_args,
 				remove_query_arg( [ 'action', 'action2', '_wpnonce', 'form_id', 'paged', '_wp_http_referer' ] )
 			)
 		);
@@ -194,7 +201,7 @@ class BulkActions {
 	 */
 	private function process_action_trash( $id ) {
 
-		return wpforms()->get( 'form' )->update_status( $id, 'trash' );
+		return wpforms()->obj( 'form' )->update_status( $id, 'trash' );
 	}
 
 	/**
@@ -208,7 +215,7 @@ class BulkActions {
 	 */
 	private function process_action_restore( $id ) {
 
-		return wpforms()->get( 'form' )->update_status( $id, 'publish' );
+		return wpforms()->obj( 'form' )->update_status( $id, 'publish' );
 	}
 
 	/**
@@ -222,7 +229,7 @@ class BulkActions {
 	 */
 	private function process_action_delete( $id ) {
 
-		return wpforms()->get( 'form' )->delete( $id );
+		return wpforms()->obj( 'form' )->delete( $id );
 	}
 
 	/**
@@ -244,7 +251,7 @@ class BulkActions {
 			return false;
 		}
 
-		return wpforms()->get( 'form' )->duplicate( $id );
+		return wpforms()->obj( 'form' )->duplicate( $id );
 	}
 
 	/**
@@ -264,7 +271,7 @@ class BulkActions {
 		// So, after the execution we should display the same notice as for the `delete` action.
 		$this->action = 'delete';
 
-		return wpforms()->get( 'form' )->empty_trash();
+		return wpforms()->obj( 'form' )->empty_trash();
 	}
 
 	/**
@@ -320,7 +327,7 @@ class BulkActions {
 	 *
 	 * @since 1.7.3
 	 */
-	public function notices() {
+	public function notices() { // phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
 
 		// phpcs:disable WordPress.Security.NonceVerification
 		$results = [
@@ -328,6 +335,7 @@ class BulkActions {
 			'restored'   => ! empty( $_REQUEST['restored'] ) ? sanitize_key( $_REQUEST['restored'] ) : false,
 			'deleted'    => ! empty( $_REQUEST['deleted'] ) ? sanitize_key( $_REQUEST['deleted'] ) : false,
 			'duplicated' => ! empty( $_REQUEST['duplicated'] ) ? sanitize_key( $_REQUEST['duplicated'] ) : false,
+			'type'       => ! empty( $_REQUEST['type'] ) ? sanitize_key( $_REQUEST['type'] ) : 'form',
 		];
 		// phpcs:enable WordPress.Security.NonceVerification
 
@@ -351,37 +359,30 @@ class BulkActions {
 	 *
 	 * @param array $results Action results data.
 	 */
-	private function notices_success( $results ) {
+	private function notices_success( array $results ) {
 
-		if ( ! empty( $results['trashed'] ) ) {
-			$notice = sprintf( /* translators: %d - trashed forms count. */
-				_n( '%d form was successfully moved to Trash.', '%d forms were successfully moved to Trash.', (int) $results['trashed'], 'wpforms-lite' ),
-				(int) $results['trashed']
-			);
+		$type = $results['type'] ?? '';
+
+		if ( ! in_array( $type, [ 'form', 'template' ], true ) ) {
+			return;
 		}
 
-		if ( ! empty( $results['restored'] ) ) {
-			$notice = sprintf( /* translators: %d - restored forms count. */
-				_n( '%d form was successfully restored.', '%d forms were successfully restored.', (int) $results['restored'], 'wpforms-lite' ),
-				(int) $results['restored']
-			);
-		}
+		$method  = "get_notice_success_for_{$type}";
+		$actions = [ 'trashed', 'restored', 'deleted', 'duplicated' ];
 
-		if ( ! empty( $results['deleted'] ) ) {
-			$notice = sprintf( /* translators: %d - deleted forms count. */
-				_n( '%d form was successfully permanently deleted.', '%d forms were successfully permanently deleted.', (int) $results['deleted'], 'wpforms-lite' ),
-				(int) $results['deleted']
-			);
-		}
+		foreach ( $actions as $action ) {
+			$count = (int) $results[ $action ];
 
-		if ( ! empty( $results['duplicated'] ) ) {
-			$notice = sprintf( /* translators: %d - duplicated forms count. */
-				_n( '%d form was successfully duplicated.', '%d forms were successfully duplicated.', (int) $results['duplicated'], 'wpforms-lite' ),
-				(int) $results['duplicated']
-			);
-		}
+			if ( ! $count ) {
+				continue;
+			}
 
-		if ( ! empty( $notice ) ) {
+			$notice = $this->$method( $action, $count );
+
+			if ( ! $notice ) {
+				continue;
+			}
+
 			Notice::add( $notice, 'info' );
 		}
 	}
@@ -401,7 +402,92 @@ class BulkActions {
 		$removable_query_args[] = 'restored';
 		$removable_query_args[] = 'deleted';
 		$removable_query_args[] = 'duplicated';
+		$removable_query_args[] = 'type';
 
 		return $removable_query_args;
+	}
+
+	/**
+	 * Get notice success message for form.
+	 *
+	 * @since 1.9.2.3
+	 *
+	 * @param string $action Action type.
+	 * @param int    $count  Count of forms.
+	 *
+	 * @return string
+	 * @noinspection PhpUnusedPrivateMethodInspection
+	 */
+	private function get_notice_success_for_form( string $action, int $count ): string {
+
+		switch ( $action ) {
+			case 'restored':
+				/* translators: %1$d - restored forms count. */
+				$notice = _n( '%1$d form was successfully restored.', '%1$d forms were successfully restored.', $count, 'wpforms-lite' );
+				break;
+
+			case 'deleted':
+				/* translators: %1$d - deleted forms count. */
+				$notice = _n( '%1$d form was successfully permanently deleted.', '%1$d forms were successfully permanently deleted.', $count, 'wpforms-lite' );
+				break;
+
+			case 'duplicated':
+				/* translators: %1$d - duplicated forms count. */
+				$notice = _n( '%1$d form was successfully duplicated.', '%1$d forms were successfully duplicated.', $count, 'wpforms-lite' );
+				break;
+
+			case 'trashed':
+				/* translators: %1$d - trashed forms count. */
+				$notice = _n( '%1$d form was successfully moved to Trash.', '%1$d forms were successfully moved to Trash.', $count, 'wpforms-lite' );
+				break;
+
+			default:
+				// phpcs:ignore WPForms.Formatting.EmptyLineBeforeReturn.AddEmptyLineBeforeReturnStatement
+				return '';
+		}
+
+		return sprintf( $notice, $count );
+	}
+
+	/**
+	 * Get notice success message for template.
+	 *
+	 * @since 1.9.2.3
+	 *
+	 * @param string $action Action type.
+	 * @param int    $count  Count of forms.
+	 *
+	 * @return string
+	 * @noinspection PhpUnusedPrivateMethodInspection
+	 */
+	private function get_notice_success_for_template( string $action, int $count ): string {
+
+		switch ( $action ) {
+			case 'restored':
+				/* translators: %1$d - restored templates count. */
+				$notice = _n( '%1$d template was successfully restored.', '%1$d templates were successfully restored.', $count, 'wpforms-lite' );
+				break;
+
+			case 'deleted':
+				/* translators: %1$d - deleted templates count. */
+				$notice = _n( '%1$d template was successfully permanently deleted.', '%1$d templates were successfully permanently deleted.', $count, 'wpforms-lite' );
+				break;
+
+			case 'duplicated':
+				/* translators: %1$d - duplicated templates count. */
+				$notice = _n( '%1$d template was successfully duplicated.', '%1$d templates were successfully duplicated.', $count, 'wpforms-lite' );
+				break;
+
+			case 'trashed':
+				/* translators: %1$d - trashed templates count. */
+				$notice = _n( '%1$d template was successfully moved to Trash.', '%1$d templates were successfully moved to Trash.', $count, 'wpforms-lite' );
+				break;
+
+			default:
+				// phpcs:ignore WPForms.Formatting.EmptyLineBeforeReturn.AddEmptyLineBeforeReturnStatement
+				return '';
+		}
+
+		return sprintf( $notice, $count );
 	}
 }

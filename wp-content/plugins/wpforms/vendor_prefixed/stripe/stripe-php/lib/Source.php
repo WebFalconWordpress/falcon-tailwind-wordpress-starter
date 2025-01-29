@@ -57,8 +57,6 @@ namespace WPForms\Vendor\Stripe;
 class Source extends ApiResource
 {
     const OBJECT_NAME = 'source';
-    use ApiOperations\Create;
-    use ApiOperations\Retrieve;
     use ApiOperations\Update;
     const FLOW_CODE_VERIFICATION = 'code_verification';
     const FLOW_NONE = 'none';
@@ -69,8 +67,91 @@ class Source extends ApiResource
     const STATUS_CONSUMED = 'consumed';
     const STATUS_FAILED = 'failed';
     const STATUS_PENDING = 'pending';
+    const TYPE_ACH_CREDIT_TRANSFER = 'ach_credit_transfer';
+    const TYPE_ACH_DEBIT = 'ach_debit';
+    const TYPE_ACSS_DEBIT = 'acss_debit';
+    const TYPE_ALIPAY = 'alipay';
+    const TYPE_AU_BECS_DEBIT = 'au_becs_debit';
+    const TYPE_BANCONTACT = 'bancontact';
+    const TYPE_CARD = 'card';
+    const TYPE_CARD_PRESENT = 'card_present';
+    const TYPE_EPS = 'eps';
+    const TYPE_GIROPAY = 'giropay';
+    const TYPE_IDEAL = 'ideal';
+    const TYPE_KLARNA = 'klarna';
+    const TYPE_MULTIBANCO = 'multibanco';
+    const TYPE_P24 = 'p24';
+    const TYPE_SEPA_CREDIT_TRANSFER = 'sepa_credit_transfer';
+    const TYPE_SEPA_DEBIT = 'sepa_debit';
+    const TYPE_SOFORT = 'sofort';
+    const TYPE_THREE_D_SECURE = 'three_d_secure';
+    const TYPE_WECHAT = 'wechat';
     const USAGE_REUSABLE = 'reusable';
     const USAGE_SINGLE_USE = 'single_use';
+    /**
+     * Creates a new source object.
+     *
+     * @param null|array $params
+     * @param null|array|string $options
+     *
+     * @throws \Stripe\Exception\ApiErrorException if the request fails
+     *
+     * @return \Stripe\Source the created resource
+     */
+    public static function create($params = null, $options = null)
+    {
+        self::_validateParams($params);
+        $url = static::classUrl();
+        list($response, $opts) = static::_staticRequest('post', $url, $params, $options);
+        $obj = \WPForms\Vendor\Stripe\Util\Util::convertToStripeObject($response->json, $opts);
+        $obj->setLastResponse($response);
+        return $obj;
+    }
+    /**
+     * Retrieves an existing source object. Supply the unique source ID from a source
+     * creation request and Stripe will return the corresponding up-to-date source
+     * object information.
+     *
+     * @param array|string $id the ID of the API resource to retrieve, or an options array containing an `id` key
+     * @param null|array|string $opts
+     *
+     * @throws \Stripe\Exception\ApiErrorException if the request fails
+     *
+     * @return \Stripe\Source
+     */
+    public static function retrieve($id, $opts = null)
+    {
+        $opts = \WPForms\Vendor\Stripe\Util\RequestOptions::parse($opts);
+        $instance = new static($id, $opts);
+        $instance->refresh();
+        return $instance;
+    }
+    /**
+     * Updates the specified source by setting the values of the parameters passed. Any
+     * parameters not provided will be left unchanged.
+     *
+     * This request accepts the <code>metadata</code> and <code>owner</code> as
+     * arguments. It is also possible to update type specific information for selected
+     * payment methods. Please refer to our <a href="/docs/sources">payment method
+     * guides</a> for more detail.
+     *
+     * @param string $id the ID of the resource to update
+     * @param null|array $params
+     * @param null|array|string $opts
+     *
+     * @throws \Stripe\Exception\ApiErrorException if the request fails
+     *
+     * @return \Stripe\Source the updated resource
+     */
+    public static function update($id, $params = null, $opts = null)
+    {
+        self::_validateParams($params);
+        $url = static::resourceUrl($id);
+        list($response, $opts) = static::_staticRequest('post', $url, $params, $opts);
+        $obj = \WPForms\Vendor\Stripe\Util\Util::convertToStripeObject($response->json, $opts);
+        $obj->setLastResponse($response);
+        return $obj;
+    }
     use ApiOperations\NestedResource;
     /**
      * @param null|array $params
@@ -109,7 +190,7 @@ class Source extends ApiResource
      *
      * @throws \Stripe\Exception\ApiErrorException if the request fails
      *
-     * @return \Stripe\Collection<\Stripe\SourceTransaction> list of SourceTransactions
+     * @return \Stripe\Collection<\Stripe\SourceTransaction> list of source transactions
      */
     public static function allSourceTransactions($id, $params = null, $opts = null)
     {
