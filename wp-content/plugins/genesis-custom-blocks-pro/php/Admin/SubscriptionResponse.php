@@ -80,26 +80,6 @@ class SubscriptionResponse {
 			]
 		);
 
-		if ( empty( $subscription_key ) ) {
-			$this->error_code = Subscription::ERROR_CODE_NO_KEY;
-			update_option( Subscription::PRODUCT_INFO_OPTION_EXPIRATION, time() + MINUTE_IN_SECONDS * 5, false );
-			update_option( Subscription::PRODUCT_INFO_OPTION_NAME, $this, false );
-			return;
-		}
-
-		if ( is_wp_error( $response ) || self::SUCCESS_CODE !== wp_remote_retrieve_response_code( $response ) ) {
-			if ( is_wp_error( $response ) ) {
-				$this->error_code = $response->get_error_code();
-			} else {
-				$response_body    = json_decode( wp_remote_retrieve_body( $response ), false );
-				$this->error_code = ! empty( $response_body->error_code ) ? $response_body->error_code : 'unknown';
-			}
-
-			// Cache an empty object for 5 minutes to give the product info API time to recover.
-			update_option( Subscription::PRODUCT_INFO_OPTION_EXPIRATION, time() + MINUTE_IN_SECONDS * 5, false );
-			update_option( Subscription::PRODUCT_INFO_OPTION_NAME, $this, false );
-			return;
-		}
 
 		$this->is_valid     = true;
 		$this->product_info = new stdClass();

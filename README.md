@@ -2,7 +2,7 @@
 
 Purpose of this repo is to demonstrate and document recommended workflows for integrating WP Engine, Local, Git and Github in our Wordpress development cycle.  
 
-URL of the WP Engine instance is: [https://bildwpdemode.wpengine.com](https://bildwpdemode.wpengine.com)
+URL of the WP Engine instance is: [https://falconstarter.wpengine.com/](https://falconstarter.wpengine.com/)
 
 
 
@@ -39,7 +39,7 @@ When starting work on a new Wordpress website follow these steps:
   - Run **git init** to initialize the repo.
   - Run **git remote add origin >github-repo-url<** to connect with the Github repo.
   - Run **git fetch** to get existing git data.
-  - Run **git checkout -t origin/development -f** to set upstream branch.
+  - Run **git checkout -t origin/main -f** to set upstream branch.
 
 
 
