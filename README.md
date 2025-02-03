@@ -45,6 +45,16 @@ When starting work on a new Wordpress website follow these steps:
 
 ## Recommended practices
 
+### Config.php add settings to disable caching
+
+Add these settings to your wp-config.php file to disable caching during local development. Make sure that you have not allready defined because you will get an error:
+```
+define( 'WP_DEBUG', true );
+define( 'SCRIPT_DEBUG', true );
+define( 'WP_DEVELOPMENT_MODE', 'all' );
+define( 'WP_ENVIRONMENT_TYPE', 'local' );
+```
+
 ### Database workflow
 
 - Database shoud usually follow this flow *Production -> Staging -> Local*
